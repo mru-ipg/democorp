@@ -280,6 +280,7 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
                   navigationState: this.productNavigationState,
                 };
                 this.orchestration.dstSettingsAllProducts = this.dstSettings;
+                console.log(this.productNavigationState)
               }
               this.busy.endBusy(true);
             }),
@@ -317,7 +318,7 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
   }
 
   public async ngOnInit(): Promise<void> {
-    this.productNavigationState = { StartIndex: 0 };
+    this.productNavigationState = { StartIndex: 0};
     this.orchestration.selectedCategory = null;
     this.updateDisplayedColumns(this.displayedProductColumns);
 
@@ -350,6 +351,7 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
 
   public async categorySelectedNode(node: NewRequestCategoryNode): Promise<void> {
     this.productNavigationState.StartIndex = 0;
+    this.productNavigationState.PageSize = 100;
     if (node.entity) {
       // This is a category
       let category = node?.entity?.GetEntity();
@@ -379,7 +381,7 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
     const groupItem =  await this.adsgroupsService.typedClient.PortalGroupsAdgroup.Get(formatedGroupName);
     const adsGroup_uid = groupItem.Data[0].GetEntity().GetKeys()[0];
     const adAccountsinGroup =  await this.adsgroupsService.typedClient.PortalGroupsAdaccount.Get(adsGroup_uid);  
-    this.productDetailsService.showProductDetails(item, this.recipients);
+    this.productDetailsService.showProductDetails(item, this.recipients, adAccountsinGroup);
   }
 
   /**
@@ -404,6 +406,7 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
     try {
       const parameters = this.getCollectionLoadParameter();
       let data = await this.productApi.get(parameters);
+      console.log('get Data form parameters',parameters)
 
       if (data) {
         this.dstSettings = {
@@ -415,6 +418,7 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
         this.orchestration.dstSettingsAllProducts = this.dstSettings;
 
         if (loadPreselection) {
+
           this.orchestration.preselectBySource(SelectedProductSource.AllProducts, this.dst);
         }
 
@@ -426,12 +430,14 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
   }
 
   private getCollectionLoadParameter(): CollectionLoadParameters | ServiceItemParameters {
+  
     let parameters: CollectionLoadParameters | ServiceItemParameters = {
       ...this.productNavigationState,
       UID_Person: this.orchestration.recipients
         ? MultiValue.FromString(this.orchestration.recipients.value).GetValues().join(',')
         : undefined,
     };
+
 
     if (this.accProductGroup) {
       parameters.UID_AccProductGroup = this.accProductGroup;

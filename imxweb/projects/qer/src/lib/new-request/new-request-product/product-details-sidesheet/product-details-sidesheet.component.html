@@ -69,6 +69,12 @@
       </mat-tab>
     </mat-tab-group>
   </mat-card>
+  <mat-card>
+    <span>Members of the Active Directory Group</span>
+    <mat-list class="account-list" role="list">
+      <mat-list-item *ngFor="let adAccount of adGroupsAccounts" role="listitem">{{adAccount.GetEntity().GetColumn("UID_ADSAccount").GetDisplayValue()}}</mat-list-item>
+    </mat-list>
+  </mat-card>
   <span class="entitlement-info" *ngIf="onEntitlements">
     {{ '#LDS#Here you can get an overview of the entitlements associated with the product. If you request the product, the recipient will get the listed entitlements.' | translate }}
   </span>
