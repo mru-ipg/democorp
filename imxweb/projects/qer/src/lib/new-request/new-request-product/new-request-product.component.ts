@@ -46,6 +46,7 @@ import { from } from 'rxjs';
 import { SelectedProductSource } from '../new-request-selected-products/selected-product-item.interface';
 import { ProductDetailsService } from './product-details-sidesheet/product-details.service';
 import { NewRequestSelectionService } from '../new-request-selection.service';
+import {AdsGroupService} from '../../ads-group.service';
 import { CurrentProductSource } from '../current-product-source';
 import { ActivatedRoute } from '@angular/router';
 import { skip } from 'rxjs/operators';
@@ -248,6 +249,7 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
     private readonly cd: ChangeDetectorRef,
     private readonly busyService: BusyService,
     private readonly route: ActivatedRoute,
+    private readonly adsgroupsService: AdsGroupService
   ) {
     this.orchestration.selectedView = SelectedProductSource.AllProducts;
     this.orchestration.searchApi$.next(this.searchApi);
@@ -372,6 +374,11 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
   }
 
   public async onRowSelected(item: PortalShopServiceitems): Promise<void> {
+    const groupName = item.GetEntity().GetColumn("ArticleCode").GetValue();
+    const formatedGroupName  = this.getValueAfterSlash(groupName);
+    const groupItem =  await this.adsgroupsService.typedClient.PortalGroupsAdgroup.Get(formatedGroupName);
+    const adsGroup_uid = groupItem.Data[0].GetEntity().GetKeys()[0];
+    const adAccountsinGroup =  await this.adsgroupsService.typedClient.PortalGroupsAdaccount.Get(adsGroup_uid);  
     this.productDetailsService.showProductDetails(item, this.recipients);
   }
 
@@ -476,5 +483,13 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
       this.productNavigationState.filter = [];
       this.resetSidenav = true;
     }
+  }
+
+  getValueAfterSlash(input: string): string {
+    const index = input.indexOf('\\');
+    if (index !== -1 && index < input.length - 1) {
+        return input.substring(index + 1); // Adjusted to start from index + 1
+    }
+    return input;
   }
 }
