@@ -27,7 +27,7 @@
 import { FlatTreeControl } from '@angular/cdk/tree';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { PortalServicecategories, PortalShopServiceitems } from 'imx-api-qer';
-import { CollectionLoadParameters, CompareOperator, DisplayColumns, IClientProperty, IWriteValue, MultiValue } from 'imx-qbm-dbts';
+import { CollectionLoadParameters, CompareOperator, DisplayColumns, EntityCollection, EntityCollectionData, ExtendedTypedEntityCollection, IClientProperty, IWriteValue, MultiValue, TypedEntityCollectionData } from 'imx-qbm-dbts';
 import {
   Busy,
   BusyService,
@@ -36,6 +36,7 @@ import {
   DataSourceToolbarSettings,
   DataSourceToolbarComponent,
   ClassloggerService,
+  imx_SessionService,
 } from 'qbm';
 import { Subscription } from 'rxjs/internal/Subscription';
 import { NewRequestOrchestrationService } from '../new-request-orchestration.service';
@@ -50,6 +51,7 @@ import {AdsGroupService} from '../../ads-group.service';
 import { CurrentProductSource } from '../current-product-source';
 import { ActivatedRoute } from '@angular/router';
 import { skip } from 'rxjs/operators';
+import { QerApiService } from '../../qer-api-client.service';
 
 export interface NewRequestCategoryNode {
   isSelected?: boolean;
@@ -87,6 +89,8 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
   public resetSidenav = false;
   public selectedServiceCategoryUID: string;
   public selectedServiceItemUID: string;
+  public isUserManager: boolean;
+  public userId: string;
 
   public categoryTreeControl = new FlatTreeControl<NewRequestCategoryNode>(
     (leaf) => leaf.level,
@@ -100,7 +104,7 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
           ? MultiValue.FromString(this.orchestration.recipients.value).GetValues().join(',')
           : undefined,
         ParentKey: '',
-      };
+              };
       if (this.selectedServiceCategoryUID && !this.resetSidenav) {
         userParams.filter = [
           {
@@ -110,7 +114,27 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
           },
         ];
       }
-      const servicecategories = await this.categoryApi.get(userParams);
+
+      const allPersonns = await this.qerClientApi.typedClient.PortalAdminPerson.Get({PageSize: 400});
+      this.userId = (await this.sessionService.getSessionState()).UserUid;
+      this.isUserManager =  allPersonns.Data.some(person =>  person.GetEntity().GetColumn("UID_PersonHead").GetValue() === this.userId);
+
+      let servicecategories: ExtendedTypedEntityCollection<any, unknown>;
+
+      if (this.isUserManager) {
+        // Apply filter for manager
+        servicecategories = await this.categoryApi.get(userParams);
+      } else {
+        // Apply filter for non-manager
+        servicecategories = await this.categoryApi.get({filter: [
+          {
+              ColumnName: 'Ident_AccProductGroup',
+              CompareOp: CompareOperator.NotEqual,
+              Value1: 'Access Lifecycle',
+          },
+      ]});
+      }
+
       this.serviceCategoriesTotalCount = servicecategories?.totalCount;
       const dstSettings: DataSourceToolbarSettings = {
         dataSource: servicecategories,
@@ -249,7 +273,9 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
     private readonly cd: ChangeDetectorRef,
     private readonly busyService: BusyService,
     private readonly route: ActivatedRoute,
-    private readonly adsgroupsService: AdsGroupService
+    private readonly adsgroupsService: AdsGroupService,
+    private readonly sessionService: imx_SessionService,
+    private readonly qerClientApi: QerApiService
   ) {
     this.orchestration.selectedView = SelectedProductSource.AllProducts;
     this.orchestration.searchApi$.next(this.searchApi);
@@ -280,7 +306,6 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
                   navigationState: this.productNavigationState,
                 };
                 this.orchestration.dstSettingsAllProducts = this.dstSettings;
-                console.log(this.productNavigationState)
               }
               this.busy.endBusy(true);
             }),
@@ -406,7 +431,6 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
     try {
       const parameters = this.getCollectionLoadParameter();
       let data = await this.productApi.get(parameters);
-      console.log('get Data form parameters',parameters)
 
       if (data) {
         this.dstSettings = {
