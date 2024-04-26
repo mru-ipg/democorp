@@ -25,6 +25,15 @@
   background-repeat: no-repeat;
   padding-left: 20px;
 }
+#shadow-none{
+  box-shadow: none !important;
+}
+
+.mat-menu-panel{
+  background-color: transparent !important;
+  box-shadow: none !important;
+
+}
 /*#endregion*/
 
 /* #region VI_Styles_RendererSettings_Default (Flex styles) */

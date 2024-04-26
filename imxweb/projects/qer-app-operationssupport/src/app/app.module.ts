@@ -50,7 +50,7 @@ import {
   SqlWizardApiService,
   SqlWizardModule,
 } from 'qbm';
-import { OutstandingModule } from 'dpr';
+import { OutstandingModule } from '../../../dpr/src/lib/outstanding/outstanding.module';
 import { AppRoutingModule } from './app-routing.module';
 import { SyncModule } from './sync/sync.module';
 import { ObjectOverviewModule } from './object-overview/object-overview.module';

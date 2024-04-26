@@ -485,7 +485,7 @@ export class OutstandingComponent implements OnInit {
     return { TypeName: 'OutstandingObject', Columns: columns };
   }
 
-  private get selectedNamespaceTitle(): string{
+  public get selectedNamespaceTitle(): string{
     return this.selectedNamespace?.GetEntity()?.GetDisplayLong();
   }
 }
