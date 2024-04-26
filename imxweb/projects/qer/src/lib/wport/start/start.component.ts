@@ -27,13 +27,14 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { UserConfig, ProjectConfig, QerProjectConfig } from 'imx-api-qer';
+import { UserConfig, ProjectConfig, QerProjectConfig, PortalPersonRolemembershipsAerole } from 'imx-api-qer';
 import { UserModelService } from '../../user/user-model.service';
 import { PendingItemsType } from '../../user/pending-items-type.interface';
 import { ProjectConfigurationService } from '../../project-configuration/project-configuration.service';
 import { imx_SessionService, SystemInfoService } from 'qbm';
 import { SystemInfo } from 'imx-api-qbm';
 import { DashboardService } from './dashboard.service';
+import { QerApiService } from '../../qer-api-client.service';
 
 @Component({
   templateUrl: './start.component.html',
@@ -47,6 +48,7 @@ export class StartComponent implements OnInit {
   public systemInfo: SystemInfo;
   public viewReady: boolean;
   public userUid: string;
+  public aeroles: PortalPersonRolemembershipsAerole[];
 
   constructor(
     public readonly router: Router,
@@ -55,7 +57,8 @@ export class StartComponent implements OnInit {
     private readonly systemInfoService: SystemInfoService,
     private readonly sessionService: imx_SessionService,
     private readonly detectRef: ChangeDetectorRef,
-    private readonly projectConfigurationService: ProjectConfigurationService
+    private readonly projectConfigurationService: ProjectConfigurationService,
+    private readonly qerClient: QerApiService
   ) {}
 
   public async ngOnInit(): Promise<void> {
@@ -70,6 +73,8 @@ export class StartComponent implements OnInit {
       this.projectConfig = await this.projectConfigurationService.getConfig();
       this.systemInfo = await this.systemInfoService.get();
       this.userUid = (await this.sessionService.getSessionState()).UserUid;
+      this.aeroles =  (await this.qerClient.typedClient.PortalPersonRolemembershipsAerole.Get(this.userUid)).Data;
+
     } finally {
       busy.endBusy();
     }

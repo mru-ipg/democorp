@@ -140,6 +140,33 @@
   </div>
   <div class="imx-flexible-tile-row">
     <imx-businessowner-chartsummary></imx-businessowner-chartsummary>
+    <imx-tile *ngIf="viewReady"
+    data-imx-identifier="businessowner-chartsummary-tile-my-direct-reports" [identifier]="'my-direct-reports'"
+    [size]="'Dashboard'" [contentType]="'Container'">
+    <ng-template #CaptionTemplate>
+      <div class="imx-flex-header">
+        <div data-imx-identifier="tile-div-caption-container" class="imx-generic-tile-caption">
+          <h1 data-imx-identifier="tile-h1-caption">
+            <span>My Ae Roles</span>
+            <span>({{aeroles.length }}) </span>
+          </h1>
+        </div>
+        <div class="imx-mobile-mobileonly">
+          <button mat-icon-button color="primary" [attr.data-imx-identifier]="'tile-button-explore-mobile-reports'"
+            type="button">
+            <eui-icon icon="chevronright"></eui-icon>
+          </button>
+        </div>
+      </div>
+    </ng-template>
+    <div class="imx-tile-content">
+      <ul class="imx-valuelist">
+        <li *ngFor="let identity of aeroles">
+          <a tabindex="0">{{identity.GetEntity().GetDisplay()}}</a>
+        </li>
+      </ul>
+    </div>
+  </imx-tile>
 
     <imx-ext id="Dashboard-LargeTiles"></imx-ext>
     <!-- TODO later
