@@ -172,12 +172,12 @@ export class InitService {
           title: '#LDS#Responsibilities',
           sorting: '30',
           items: [
-            {
-              id: 'QER_Responsibilities_AssignDevice',
-              route: 'claimdevice',
-              title: '#LDS#Menu Entry Device ownership',
-              sorting: '30-20',
-            },
+            // {
+            //   id: 'QER_Responsibilities_AssignDevice',
+            //   route: 'claimdevice',
+            //   title: '#LDS#Menu Entry Device ownership',
+            //   sorting: '30-20',
+            // },
           ],
         };
       }

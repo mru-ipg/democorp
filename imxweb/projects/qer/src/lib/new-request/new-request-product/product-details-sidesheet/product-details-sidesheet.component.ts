@@ -37,19 +37,24 @@ import { PortalServiceitems } from 'imx-api-qer';
 export class ProductDetailsSidesheetComponent implements OnInit {
   public hasEntitlements: boolean;
   public onEntitlements = false;
+  public adGroupsAccounts: any [] = [];
 
   constructor(
     @Inject(EUI_SIDESHEET_DATA) public data: {
       item: PortalServiceitems,
+      adGroup
       orderStatus: {
         statusIcon: string,
         statusDisplay: string
       } | null,
       imageUrl: string
     },
-  ) { }
+  ) { 
+    this.adGroupsAccounts = this.data.adGroup.Data
+  }
 
   public ngOnInit(): void {
+    console.log(this.adGroupsAccounts);
     this.hasEntitlements = ['ESet', 'QERAssign'].includes(this.getValue('TableName'));
   }
 

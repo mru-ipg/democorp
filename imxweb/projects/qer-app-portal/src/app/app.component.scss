@@ -8,6 +8,10 @@
   height: 100vh;
 }
 
+.current-time {
+  justify-self: baseline;
+}
+
 .pageContent {
   display: flex;
   flex-direction: column;

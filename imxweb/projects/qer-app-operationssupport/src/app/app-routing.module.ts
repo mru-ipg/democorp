@@ -43,7 +43,7 @@ import { JobPerformanceComponent } from './processes/job-performance/job-perform
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { SyncInformationComponent } from './sync/sync-information/sync-information.component';
 import { SyncJournalComponent } from './sync/sync-journal/sync-journal.component';
-import { OutstandingComponent } from 'dpr';
+import { OutstandingComponent } from '../../../dpr/src/lib/outstanding/outstanding.component';
 import { SystemStatusRouteGuardService } from './guards/system-status-route-guard.service';
 import { OutstandingManagerGuardService } from './guards/outstanding-manager-guard.service';
 import { ObjectsByIdComponent } from './processes/objects-by-id/objects-by-id.component';

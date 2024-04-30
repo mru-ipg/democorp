@@ -9,6 +9,11 @@
 
 :host {
 
+  .account-list {
+    height: 100%;
+    overflow-y: auto;
+  }
+
   .eui-sidesheet-content {
     @include imx-flex-column-container();
 

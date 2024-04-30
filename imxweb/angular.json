@@ -2052,6 +2052,9 @@
     }
   },
   "cli": {
-    "analytics": "406eb5c5-3afb-4dab-b878-0cb0ade8d2aa"
+    "analytics": "406eb5c5-3afb-4dab-b878-0cb0ade8d2aa",
+    "cache": {
+      "enabled": false
+    }
   }
 }

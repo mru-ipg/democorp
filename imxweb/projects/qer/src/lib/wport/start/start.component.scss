@@ -13,6 +13,12 @@
   flex-wrap: wrap ;
 }
 
+.mat-menu-panel{
+  background-color: transparent !important;
+  box-shadow: none !important;
+
+}
+
 .mat-card {
   width: $tile-width;
   height: 108px;

@@ -31,4 +31,5 @@ export interface DuplicateCheckParameter {
   lastName?: string;
   defaultEmailAddress?: string;
   centralAccount?: string;
+  personellNumber?: string;
 }

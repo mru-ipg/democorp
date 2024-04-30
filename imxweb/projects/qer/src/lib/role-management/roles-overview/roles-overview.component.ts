@@ -124,6 +124,8 @@ export class RolesOverviewComponent implements OnInit, OnDestroy, SideNavigation
   public async ngOnInit(): Promise<void> {
     this.ownershipInfo = this.data;
     this.useTree = this.roleService.hasHierarchy(this.ownershipInfo.TableName, this.isAdmin);
+    console.log("This is the Column Value: ", `UID_Parent${this.ownershipInfo.TableName}` );
+    console.log("This is the Onershipinformation Data", this.ownershipInfo.TableName);
     this.canCreateAeRole = (await this.userModelService.getUserConfig()).CanCreateAERole;
 
     try {
@@ -228,12 +230,18 @@ export class RolesOverviewComponent implements OnInit, OnDestroy, SideNavigation
   }
 
   public async createNew(event: Event, entity?: IEntity): Promise<void> {
+    console.log("THis is the entity", entity)
     event.stopPropagation();
     const over = this.busyServiceElemental.show();
     let newEntity = null;
+    console.log("This is the Column Value: ", `UID_Parent${this.ownershipInfo.TableName}` );
+
 
     try {
+       
       newEntity = await this.roleService.getInteractiveNew(this.ownershipInfo.TableName);
+      console.log(newEntity);
+
       if (entity != null) {
         const column = CdrFactoryService.tryGetColumn(newEntity.GetEntity(), `UID_Parent${this.ownershipInfo.TableName}`);
         if (column) {
@@ -245,6 +253,7 @@ export class RolesOverviewComponent implements OnInit, OnDestroy, SideNavigation
     }
 
     if (newEntity == null) {
+      console.log("I have reached this point");
       return;
     }
 

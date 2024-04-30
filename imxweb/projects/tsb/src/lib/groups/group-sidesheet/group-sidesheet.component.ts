@@ -262,3 +262,5 @@ export class GroupSidesheetComponent implements OnInit {
     }
   }
 }
+
+export { GroupSidesheetData, GroupsService };

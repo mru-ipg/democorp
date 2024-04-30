@@ -50,6 +50,7 @@ export class AppComponent implements OnInit, OnDestroy {
   public hideMenu = false;
   public hideUserMessage = false;
   public showPageContent = true;
+  public currentTime = Date.now();
 
   private readonly subscriptions: Subscription[] = [];
 

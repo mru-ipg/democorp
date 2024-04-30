@@ -27,7 +27,7 @@
 import { FlatTreeControl } from '@angular/cdk/tree';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { PortalServicecategories, PortalShopServiceitems } from 'imx-api-qer';
-import { CollectionLoadParameters, CompareOperator, DisplayColumns, IClientProperty, IWriteValue, MultiValue } from 'imx-qbm-dbts';
+import { CollectionLoadParameters, CompareOperator, DisplayColumns, EntityCollection, EntityCollectionData, ExtendedTypedEntityCollection, IClientProperty, IWriteValue, MultiValue, TypedEntityCollectionData } from 'imx-qbm-dbts';
 import {
   Busy,
   BusyService,
@@ -36,6 +36,7 @@ import {
   DataSourceToolbarSettings,
   DataSourceToolbarComponent,
   ClassloggerService,
+  imx_SessionService,
 } from 'qbm';
 import { Subscription } from 'rxjs/internal/Subscription';
 import { NewRequestOrchestrationService } from '../new-request-orchestration.service';
@@ -46,9 +47,11 @@ import { from } from 'rxjs';
 import { SelectedProductSource } from '../new-request-selected-products/selected-product-item.interface';
 import { ProductDetailsService } from './product-details-sidesheet/product-details.service';
 import { NewRequestSelectionService } from '../new-request-selection.service';
+import {AdsGroupService} from '../../ads-group.service';
 import { CurrentProductSource } from '../current-product-source';
 import { ActivatedRoute } from '@angular/router';
 import { skip } from 'rxjs/operators';
+import { QerApiService } from '../../qer-api-client.service';
 
 export interface NewRequestCategoryNode {
   isSelected?: boolean;
@@ -86,6 +89,8 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
   public resetSidenav = false;
   public selectedServiceCategoryUID: string;
   public selectedServiceItemUID: string;
+  public isUserManager: boolean;
+  public userId: string;
 
   public categoryTreeControl = new FlatTreeControl<NewRequestCategoryNode>(
     (leaf) => leaf.level,
@@ -99,7 +104,7 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
           ? MultiValue.FromString(this.orchestration.recipients.value).GetValues().join(',')
           : undefined,
         ParentKey: '',
-      };
+              };
       if (this.selectedServiceCategoryUID && !this.resetSidenav) {
         userParams.filter = [
           {
@@ -109,7 +114,27 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
           },
         ];
       }
-      const servicecategories = await this.categoryApi.get(userParams);
+
+      const allPersonns = await this.qerClientApi.typedClient.PortalAdminPerson.Get({PageSize: 400});
+      this.userId = (await this.sessionService.getSessionState()).UserUid;
+      this.isUserManager =  allPersonns.Data.some(person =>  person.GetEntity().GetColumn("UID_PersonHead").GetValue() === this.userId);
+
+      let servicecategories: ExtendedTypedEntityCollection<any, unknown>;
+
+      if (this.isUserManager) {
+        // Apply filter for manager
+        servicecategories = await this.categoryApi.get(userParams);
+      } else {
+        // Apply filter for non-manager
+        servicecategories = await this.categoryApi.get({filter: [
+          {
+              ColumnName: 'Ident_AccProductGroup',
+              CompareOp: CompareOperator.NotEqual,
+              Value1: 'Access Lifecycle',
+          },
+      ]});
+      }
+
       this.serviceCategoriesTotalCount = servicecategories?.totalCount;
       const dstSettings: DataSourceToolbarSettings = {
         dataSource: servicecategories,
@@ -248,6 +273,9 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
     private readonly cd: ChangeDetectorRef,
     private readonly busyService: BusyService,
     private readonly route: ActivatedRoute,
+    private readonly adsgroupsService: AdsGroupService,
+    private readonly sessionService: imx_SessionService,
+    private readonly qerClientApi: QerApiService
   ) {
     this.orchestration.selectedView = SelectedProductSource.AllProducts;
     this.orchestration.searchApi$.next(this.searchApi);
@@ -315,7 +343,7 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
   }
 
   public async ngOnInit(): Promise<void> {
-    this.productNavigationState = { StartIndex: 0 };
+    this.productNavigationState = { StartIndex: 0};
     this.orchestration.selectedCategory = null;
     this.updateDisplayedColumns(this.displayedProductColumns);
 
@@ -348,6 +376,7 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
 
   public async categorySelectedNode(node: NewRequestCategoryNode): Promise<void> {
     this.productNavigationState.StartIndex = 0;
+    this.productNavigationState.PageSize = 100;
     if (node.entity) {
       // This is a category
       let category = node?.entity?.GetEntity();
@@ -372,7 +401,12 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
   }
 
   public async onRowSelected(item: PortalShopServiceitems): Promise<void> {
-    this.productDetailsService.showProductDetails(item, this.recipients);
+    const groupName = item.GetEntity().GetColumn("ArticleCode").GetValue();
+    const formatedGroupName  = this.getValueAfterSlash(groupName);
+    const groupItem =  await this.adsgroupsService.typedClient.PortalGroupsAdgroup.Get(formatedGroupName);
+    const adsGroup_uid = groupItem.Data[0].GetEntity().GetKeys()[0];
+    const adAccountsinGroup =  await this.adsgroupsService.typedClient.PortalGroupsAdaccount.Get(adsGroup_uid);  
+    this.productDetailsService.showProductDetails(item, this.recipients, adAccountsinGroup);
   }
 
   /**
@@ -408,6 +442,7 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
         this.orchestration.dstSettingsAllProducts = this.dstSettings;
 
         if (loadPreselection) {
+
           this.orchestration.preselectBySource(SelectedProductSource.AllProducts, this.dst);
         }
 
@@ -419,12 +454,14 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
   }
 
   private getCollectionLoadParameter(): CollectionLoadParameters | ServiceItemParameters {
+  
     let parameters: CollectionLoadParameters | ServiceItemParameters = {
       ...this.productNavigationState,
       UID_Person: this.orchestration.recipients
         ? MultiValue.FromString(this.orchestration.recipients.value).GetValues().join(',')
         : undefined,
     };
+
 
     if (this.accProductGroup) {
       parameters.UID_AccProductGroup = this.accProductGroup;
@@ -476,5 +513,13 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
       this.productNavigationState.filter = [];
       this.resetSidenav = true;
     }
+  }
+
+  getValueAfterSlash(input: string): string {
+    const index = input.indexOf('\\');
+    if (index !== -1 && index < input.length - 1) {
+        return input.substring(index + 1); // Adjusted to start from index + 1
+    }
+    return input;
   }
 }

@@ -47,8 +47,19 @@ export class ProductDetailsService {
     private readonly translateService: TranslateService,
   ) { }
 
-  public async showProductDetails(item: PortalShopServiceitems, recipients: IWriteValue<string>): Promise<void> {
+  public async showProductDetails(item: PortalShopServiceitems, recipients: IWriteValue<string>, adGroup?: any): Promise<void> {
     const orderStatus = await this.getOrderStatus(item, recipients);
+    let dataconfig: any = {
+        item,
+        orderStatus: orderStatus,
+        imageUrl: this.getProductImage(item),
+        adGroup
+    }
+
+    if(adGroup) {
+      dataconfig.adGroup = adGroup;
+    }
+
     await this.sidesheetService
       .open(ProductDetailsSidesheetComponent, {
         title: await this.translateService.get('#LDS#Heading View Product Details').toPromise(),
@@ -57,11 +68,7 @@ export class ProductDetailsService {
         width: 'min(60%, 600px)',
         padding: '0px',
         testId: 'product-details-sidesheet',
-        data: {
-          item,
-          orderStatus: orderStatus,
-          imageUrl: this.getProductImage(item),
-        },
+        data: dataconfig
       })
       .afterClosed()
       .toPromise();

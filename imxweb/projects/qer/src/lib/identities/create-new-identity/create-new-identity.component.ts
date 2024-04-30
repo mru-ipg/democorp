@@ -52,6 +52,7 @@ export class CreateNewIdentityComponent implements OnDestroy {
   public nameIsOff = 0;
   public accountIsOff = 0;
   public mailIsOff = 0;
+  public personellNumberIsOff = 0;
 
   private subscriptions: Subscription[] = [];
 
@@ -107,12 +108,15 @@ export class CreateNewIdentityComponent implements OnDestroy {
     }
   }
 
-  public async showDuplicates(type: 'account' | 'mail' | 'name'): Promise<void> {
+  public async showDuplicates(type: 'account' | 'mail' | 'name' | 'personellNumber'): Promise<void> {
     let duplicateParameter: DuplicateCheckParameter;
 
     switch (type) {
       case 'account':
         duplicateParameter = { centralAccount: this.data.selectedIdentity.GetEntity().GetColumn('CentralAccount').GetValue() };
+        break;
+      case 'personellNumber':
+        duplicateParameter = { personellNumber: this.data.selectedIdentity.GetEntity().GetColumn('PersonellNumber').GetValue() };
         break;
       case 'mail':
         duplicateParameter = { defaultEmailAddress: this.data.selectedIdentity.GetEntity().GetColumn('DefaultEmailAddress').GetValue() };
@@ -186,6 +190,17 @@ export class CreateNewIdentityComponent implements OnDestroy {
           }
         )).totalCount;
         break;
+      case 'PersonellNumber':
+        this.mailIsOff = (await this.identityService.getDuplicates(
+          {
+            filter: this.identityService.buildFilterForduplicates(
+              {
+                personellNumber: this.data.selectedIdentity.GetEntity().GetColumn('PersonellNumber').GetValue()
+              }
+            ), PageSize: -1
+          }
+        )).totalCount;
+        break;
     }
   }
 
@@ -202,17 +217,17 @@ export class CreateNewIdentityComponent implements OnDestroy {
       }
     }));
 
-    const identifierColumns = ['FirstName', 'LastName', 'CentralAccount', 'DefaultEmailAddress'];
-    this.cdrListIdentifier = this.cdrFactoryService.buildCdrFromColumnList(this.data.selectedIdentity.GetEntity(),identifierColumns);
+    const identifierColumns = ['FirstName', 'LastName', 'CentralAccount', 'DefaultEmailAddress','personellNumber'];
+    this.cdrListIdentifier = this.cdrFactoryService.buildCdrFromColumnList(this.data.selectedIdentity.GetEntity(), identifierColumns);
 
     const personalColumns = this.data.projectConfig.PersonConfig.VI_Employee_MasterData_Attributes
       .filter(personal => !identifierColumns.includes(personal));
-    this.cdrListPersonal = this.cdrFactoryService.buildCdrFromColumnList(this.data.selectedIdentity.GetEntity(),personalColumns);
+    this.cdrListPersonal = this.cdrFactoryService.buildCdrFromColumnList(this.data.selectedIdentity.GetEntity(), personalColumns);
 
     const organizationalColumns = this.data.projectConfig.PersonConfig.VI_Employee_MasterData_OrganizationalAttributes;
-    this.cdrListOrganizational = this.cdrFactoryService.buildCdrFromColumnList(this.data.selectedIdentity.GetEntity(),organizationalColumns);
+    this.cdrListOrganizational = this.cdrFactoryService.buildCdrFromColumnList(this.data.selectedIdentity.GetEntity(), organizationalColumns);
 
     const localityColumns = this.data.projectConfig.PersonConfig.VI_Employee_MasterData_LocalityAttributes;
-    this.cdrListLocality = this.cdrFactoryService.buildCdrFromColumnList(this.data.selectedIdentity.GetEntity(),localityColumns);
+    this.cdrListLocality = this.cdrFactoryService.buildCdrFromColumnList(this.data.selectedIdentity.GetEntity(), localityColumns);
   }
 }
