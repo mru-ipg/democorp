@@ -2049,9 +2049,47 @@
           }
         }
       }
+    },
+    "bookmark": {
+      "projectType": "library",
+      "root": "projects/bookmark",
+      "sourceRoot": "projects/bookmark/src",
+      "prefix": "imx",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "projects/bookmark/ng-package.json",
+            "tsConfig": "projects/bookmark/tsconfig.lib.json"
+          },
+          "configurations": {
+            "dynamic": {
+              "project": "projects/bookmark/ng-package.dynamic.json"
+             },
+            "production": {
+              "tsConfig": "projects/bookmark/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/bookmark/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/bookmark/src/test.ts",
+            "tsConfig": "projects/bookmark/tsconfig.spec.json",
+            "karmaConfig": "projects/bookmark/karma.conf.js"
+          }
+        }
+      }
     }
   },
   "cli": {
-    "analytics": "406eb5c5-3afb-4dab-b878-0cb0ade8d2aa"
+    "analytics": "406eb5c5-3afb-4dab-b878-0cb0ade8d2aa",
+    "cache": {
+      "enabled": false
+    }
   }
 }

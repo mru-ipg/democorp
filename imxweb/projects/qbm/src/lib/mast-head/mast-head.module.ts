@@ -33,10 +33,12 @@ import { MastHeadComponent } from './mast-head.component';
 import { ImxTranslateLoader } from '../translation/imx-translate-loader';
 import { ImxMissingTranslationHandler } from '../translation/imx-missing-translation-handler';
 import { MastHeadService } from './mast-head.service';
+import { ExtModule } from '../ext/ext.module';
 
 @NgModule({
   declarations: [MastHeadComponent],
   imports: [
+    ExtModule,
     CommonModule,
     EuiCoreModule,
     EuiMaterialModule,

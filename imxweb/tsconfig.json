@@ -21,7 +21,11 @@
       "qer": ["dist/qer"],
       "qer/*": ["dist/qer/*"],
       "aob": ["dist/aob"],
-      "aob/*": ["dist/aob/*"],
+      "aob/*": [
+        "dist/aob/*"
+      ],
+      "bookmark": ["dist/bookmark"],
+      "bookmark/*": ["dist/bookmark/*"],
       "tsb": ["dist/tsb"],
       "tsb/*": ["dist/tsb/*"],
       "att": ["dist/att"],

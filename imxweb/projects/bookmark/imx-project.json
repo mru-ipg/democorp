@@ -1,0 +1,13 @@
+{
+  "Name": "bookmark",
+  "Path": "imxweb\\projects\\bookmark",
+  "ProjectType": "ng-lib",
+  "ProjectDependencies": [
+    "qer",
+    "qbm"
+  ],
+  "ChangePatterns": [
+    "imxweb\\projects\\sample-plugin",
+    "imxweb\\shared\\assets"
+  ]
+}

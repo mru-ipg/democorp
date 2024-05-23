@@ -1,0 +1,15 @@
+{
+  "name": "bookmark",
+  "version": "9.2.1",
+  "private": true,
+  "bundledDependencies": [
+    "imx-api-bookmark"
+  ],
+  "peerDependencies": {
+    "@angular/common": "^14.2.0",
+    "@angular/core": "^14.2.0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  }
+}
