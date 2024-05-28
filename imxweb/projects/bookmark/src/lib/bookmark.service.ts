@@ -1,8 +1,7 @@
-import { Injectable, OnInit } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { BookmarkComponent } from './bookmark.component';
 import { ExtService } from 'qbm';
-import { filter } from 'rxjs/operators';
-import { NavigationEnd, Router } from '@angular/router';
+import { Router } from '@angular/router';
 
 
 @Injectable({
@@ -19,7 +18,7 @@ export class BookmarkService {
   constructor(
     private readonly extService: ExtService,
     private router: Router,
-  ) {}
+  ) { }
 
   getCurrentRoute(): string {
     return this.router.url;
@@ -47,18 +46,38 @@ export class BookmarkService {
       console.log('Router Links Array:', this.routerLinks);
     }
   }
-  
-    // Method to get router links array
-    getRouterLinksArray(): string[][] {
-      return this.routerLinks;
-    }
-  
-  
-    // Method to dynamically generate void functions for each router link
-    generateGoToFunction(routerLink: string): () => void {
-      return () => {
-        const parts = routerLink.split('/').filter(part => part !== '');
-        this.router.navigate(parts);
-      };
-    }
+
+  // Method to get router links array
+  getRouterLinksArray(): string[][] {
+    return this.routerLinks;
+  }
+
+  // Method to merge router links array without duplicates
+  mergeRouterLinks(existingLinks: string[][]): string[][] {
+    const mergedLinks = [...existingLinks];
+
+    this.routerLinks.forEach(newLinkParts => {
+      const isDuplicate = mergedLinks.some(existingLinkParts => {
+        if (existingLinkParts.length !== newLinkParts.length) {
+          return false;
+        }
+        return existingLinkParts.every((part, index) => part === newLinkParts[index]);
+      });
+
+      if (!isDuplicate) {
+        mergedLinks.push(newLinkParts);
+      }
+    });
+
+    return mergedLinks;
+  }
+
+
+  // Method to dynamically generate void functions for each router link
+  generateGoToFunction(routerLink: string): () => void {
+    return () => {
+      const parts = routerLink.split('/').filter(part => part !== '');
+      this.router.navigate(parts);
+    };
+  }
 }

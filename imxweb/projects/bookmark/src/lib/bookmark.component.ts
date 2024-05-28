@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { BookmarkService } from './bookmark.service';
 import { QerApiService } from 'qer';
 import { imx_SessionService } from 'qbm';
+import { PortalPersonMasterdata } from 'imx-api-qer';
 
 @Component({
   selector: 'imx-bookmark',
@@ -12,6 +13,7 @@ import { imx_SessionService } from 'qbm';
 export class BookmarkComponent implements OnInit {
   public userId: string;
   public portalPersonAdmin: any;
+  public portalPerson: PortalPersonMasterdata;
   existingLinks: string[][] = [];
 
   constructor(
@@ -19,46 +21,23 @@ export class BookmarkComponent implements OnInit {
     private readonly sessionService: imx_SessionService,
     private qerClient: QerApiService,
   ) {
-        this.bookmarkService.OnInit();
-   }
+    this.bookmarkService.OnInit();
+  }
 
-   public async addRouterLink() {
-    console.log("addRouterLink was called")
+  public async addRouterLink() {
+    this.existingLinks = this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue(JSON.parse);
+
     const currentLink = this.bookmarkService.getCurrentRoute();
+
     this.bookmarkService.saveRouterLink(currentLink);
+    this.existingLinks = this.bookmarkService.mergeRouterLinks(this.existingLinks);
+    console.log('Updated Router Links Array:', this.existingLinks);
+
     const routerLinksArray = this.bookmarkService.getRouterLinksArray();
-    this.mergeAndLogRouterLinks();
+
     this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").PutValue(JSON.stringify(routerLinksArray));
     this.portalPersonAdmin.Data[0].GetEntity().Commit(true);
   }
-
-    // Method to merge router links array without duplicates
-    mergeRouterLinks(existingLinks: string[][], newLinks: string[][]): string[][] {
-      const mergedLinks = [...existingLinks];
-  
-      newLinks.forEach(newLinkParts => {
-        const isDuplicate = mergedLinks.some(existingLinkParts => {
-          if (existingLinkParts.length !== newLinkParts.length) {
-            return false;
-          }
-          return existingLinkParts.every((part, index) => part === newLinkParts[index]);
-        });
-  
-        if (!isDuplicate) {
-          mergedLinks.push(newLinkParts);
-        }
-      });
-  
-      return mergedLinks;
-    }
-  
-    // Method to merge and log the updated router links array
-    mergeAndLogRouterLinks() {
-      this.existingLinks = this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue(JSON.parse);
-      const currentLinks = this.bookmarkService.getRouterLinksArray();
-      this.existingLinks = this.mergeRouterLinks(this.existingLinks, currentLinks);
-      console.log('Updated Router Links Array:', this.existingLinks);
-    }
 
   async ngOnInit(): Promise<void> {
     this.userId = (await this.sessionService.getSessionState()).UserUid;
