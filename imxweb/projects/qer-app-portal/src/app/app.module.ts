@@ -91,6 +91,7 @@ import { AppComponent } from './app.component';
 import { AppService } from './app.service';
 import { PortalHyperviewService } from './hyperview/portal-hyperview.service';
 import { PortalHistoryService } from './portal-history.service';
+import { BookmarkModule } from '../../../bookmark/src/lib/bookmark.module';
 
 export const HEADLESS_BASEHREF = '/headless';
 export function getBaseHref(): string {
@@ -152,7 +153,8 @@ export function getBaseHref(): string {
     UserProcessModule,    
     SourceDetectiveModule,
     RoleMembershipsModule,
-    TeamResponsibilitiesModule
+    TeamResponsibilitiesModule,
+    BookmarkModule
   ],
   providers: [
     { provide: 'environment', useValue: environment },
