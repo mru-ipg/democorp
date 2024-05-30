@@ -21,15 +21,14 @@ export class BookmarkComponent implements OnInit {
     private readonly sessionService: imx_SessionService,
     private qerClient: QerApiService,
   ) {
-    this.bookmarkService.OnInit();
   }
 
   public async addRouterLink() {
     this.existingLinks = this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue(JSON.parse);
-
+    const test = this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue(JSON.parse);
     const currentLink = this.bookmarkService.getCurrentRoute();
 
-    this.bookmarkService.saveRouterLink(currentLink, this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue(JSON.parse));
+    this.bookmarkService.saveRouterLink(currentLink);
     console.log('Updated Router Links Array:', this.existingLinks);
 
     const routerLinksArray = this.bookmarkService.getRouterLinksArray();

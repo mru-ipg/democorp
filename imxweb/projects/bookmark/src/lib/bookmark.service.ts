@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnInit } from '@angular/core';
 import { BookmarkComponent } from './bookmark.component';
 import { ExtService } from 'qbm';
 import { Router } from '@angular/router';
@@ -7,25 +7,26 @@ import { Router } from '@angular/router';
 @Injectable({
   providedIn: 'root'
 })
-export class BookmarkService {
+export class BookmarkService implements OnInit {
   routerLinks: string[][] = [];
   private MAX_URL_LENGTH = 2048;  // Example maximum length, adjust as needed
-
-  OnInit() {
-    this.extService.register('Bookmark', { instance: BookmarkComponent })
-  }
 
   constructor(
     private readonly extService: ExtService,
     private router: Router,
   ) { }
 
+  ngOnInit() {
+    this.extService.register('Bookmark', { instance: BookmarkComponent })
+    
+  }
+
   getCurrentRoute(): string {
     return this.router.url;
   }
 
   // Method to save router link to array, checking against existingLinks
-  saveRouterLink(url: string, existingLinks: string[][]) {
+  saveRouterLink(url: string) {
     if (url.length > this.MAX_URL_LENGTH) {
       console.warn('URL is too long to be saved:', url);
       return;
@@ -42,15 +43,7 @@ export class BookmarkService {
       return linkParts.every((part, index) => part === parts[index]);
     });
 
-    // Check for duplicate links in existingLinks
-    const isDuplicateInExistingLinks = existingLinks.some(linkParts => {
-      if (linkParts.length !== parts.length) {
-        return false;
-      }
-      return linkParts.every((part, index) => part === parts[index]);
-    });
-
-    if (!isDuplicateInRouterLinks && !isDuplicateInExistingLinks) {
+    if (!isDuplicateInRouterLinks) {
       this.routerLinks.push(parts);
       console.log('Router Links Array:', this.routerLinks);
     }

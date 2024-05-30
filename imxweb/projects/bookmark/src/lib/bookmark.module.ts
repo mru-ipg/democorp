@@ -27,7 +27,7 @@ import { EuiCoreModule, EuiMaterialModule } from '@elemental-ui/core';
 export class BookmarkModule {
   constructor(private readonly initializer: BookmarkService) {
      console.log('Initialized constructor of SamplePluginModule.');
-     this.initializer.OnInit();
+     this.initializer.ngOnInit();
      console.log('SamplePluginModule initialized');
      }
     
