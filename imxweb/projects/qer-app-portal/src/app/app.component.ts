@@ -137,6 +137,9 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   public async ngOnInit(): Promise<void> {
+    const test = this.qerClient.typedClient.PortalPersonMasterdataInteractive.GetSchema().Columns;
+    //this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue(JSON.parse);
+    console.log("This is the testvalue: ",test);
     this.authentication.update();
   }
 

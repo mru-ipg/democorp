@@ -24,7 +24,8 @@ export class BookmarkService {
     return this.router.url;
   }
 
-  saveRouterLink(url: string) {
+  // Method to save router link to array, checking against existingLinks
+  saveRouterLink(url: string, existingLinks: string[][]) {
     if (url.length > this.MAX_URL_LENGTH) {
       console.warn('URL is too long to be saved:', url);
       return;
@@ -33,15 +34,23 @@ export class BookmarkService {
     const parts = url.split('/').filter(part => part !== '');
     if (parts.length === 0) return;
 
-    // Check for duplicate links
-    const isDuplicate = this.routerLinks.some(linkParts => {
+    // Check for duplicate links in routerLinks
+    const isDuplicateInRouterLinks = this.routerLinks.some(linkParts => {
       if (linkParts.length !== parts.length) {
         return false;
       }
       return linkParts.every((part, index) => part === parts[index]);
     });
 
-    if (!isDuplicate) {
+    // Check for duplicate links in existingLinks
+    const isDuplicateInExistingLinks = existingLinks.some(linkParts => {
+      if (linkParts.length !== parts.length) {
+        return false;
+      }
+      return linkParts.every((part, index) => part === parts[index]);
+    });
+
+    if (!isDuplicateInRouterLinks && !isDuplicateInExistingLinks) {
       this.routerLinks.push(parts);
       console.log('Router Links Array:', this.routerLinks);
     }
@@ -52,24 +61,26 @@ export class BookmarkService {
     return this.routerLinks;
   }
 
-  // Method to merge router links array without duplicates
-  mergeRouterLinks(existingLinks: string[][]): string[][] {
-    const mergedLinks = [...existingLinks];
 
-    this.routerLinks.forEach(newLinkParts => {
-      const isDuplicate = mergedLinks.some(existingLinkParts => {
-        if (existingLinkParts.length !== newLinkParts.length) {
-          return false;
-        }
-        return existingLinkParts.every((part, index) => part === newLinkParts[index]);
-      });
+  compareAndMergeArrays(array1: string[][], array2: string[][]): string[][] {
+    // Create a map to hold unique rows
+    const rowMap = new Map<string, string[]>();
 
-      if (!isDuplicate) {
-        mergedLinks.push(newLinkParts);
-      }
-    });
+    // Function to convert row to a unique key
+    const rowToKey = (row: string[]) => JSON.stringify(row);
 
-    return mergedLinks;
+    // Add rows from array1 to the map
+    for (const row of array1) {
+      rowMap.set(rowToKey(row), row);
+    }
+
+    // Add rows from array2 to the map (duplicates will be ignored)
+    for (const row of array2) {
+      rowMap.set(rowToKey(row), row);
+    }
+
+    // Convert the map back to an array
+    return Array.from(rowMap.values());
   }
 
 

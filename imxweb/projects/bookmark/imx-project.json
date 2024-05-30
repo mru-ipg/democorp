@@ -7,7 +7,7 @@
     "qbm"
   ],
   "ChangePatterns": [
-    "imxweb\\projects\\sample-plugin",
+    "imxweb\\projects\\bookmark",
     "imxweb\\shared\\assets"
   ]
 }

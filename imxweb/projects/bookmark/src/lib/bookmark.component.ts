@@ -29,13 +29,14 @@ export class BookmarkComponent implements OnInit {
 
     const currentLink = this.bookmarkService.getCurrentRoute();
 
-    this.bookmarkService.saveRouterLink(currentLink);
-    this.existingLinks = this.bookmarkService.mergeRouterLinks(this.existingLinks);
+    this.bookmarkService.saveRouterLink(currentLink, this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue(JSON.parse));
     console.log('Updated Router Links Array:', this.existingLinks);
 
     const routerLinksArray = this.bookmarkService.getRouterLinksArray();
 
-    this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").PutValue(JSON.stringify(routerLinksArray));
+    const mergedArray = this.bookmarkService.compareAndMergeArrays(this.existingLinks, this.bookmarkService.getRouterLinksArray());
+
+    this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").PutValue(JSON.stringify(mergedArray));
     this.portalPersonAdmin.Data[0].GetEntity().Commit(true);
   }
 
