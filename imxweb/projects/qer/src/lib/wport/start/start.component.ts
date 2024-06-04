@@ -34,6 +34,7 @@ import { ProjectConfigurationService } from '../../project-configuration/project
 import { imx_SessionService, SystemInfoService } from 'qbm';
 import { SystemInfo } from 'imx-api-qbm';
 import { DashboardService } from './dashboard.service';
+import { QerApiService } from '../../qer-api-client.service';
 
 @Component({
   templateUrl: './start.component.html',
@@ -47,8 +48,12 @@ export class StartComponent implements OnInit {
   public systemInfo: SystemInfo;
   public viewReady: boolean;
   public userUid: string;
+  public portalPersonAdmin: any;
+  public userId: string;
+  existingLinks: string[][] = [];
 
   constructor(
+    private qerClient: QerApiService,
     public readonly router: Router,
     private readonly dashboardService: DashboardService,
     private readonly userModelSvc: UserModelService,
@@ -59,6 +64,12 @@ export class StartComponent implements OnInit {
   ) {}
 
   public async ngOnInit(): Promise<void> {
+    this.userId = (await this.sessionService.getSessionState()).UserUid;
+    this.portalPersonAdmin = (await this.qerClient.typedClient.PortalPersonMasterdataInteractive.Get_byid(this.userId));
+    //const test2 = this.portalPersonAdmin = (await this.qerClient.typedClient.PortalPersonMasterdataInteractive.Get_byid(this.userId));
+    const test3 = this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue(JSON.parse);
+    this.existingLinks = this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue(JSON.parse);
+    console.log("This is the testvalue: ",test3);
     this.dashboardService.busyStateChanged.subscribe(busy => {
       this.viewReady = !busy;
       this.detectRef.detectChanges();

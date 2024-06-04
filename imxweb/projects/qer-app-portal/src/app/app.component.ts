@@ -27,11 +27,11 @@ import { Component, Inject, ErrorHandler, OnDestroy, OnInit } from '@angular/cor
 import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router, RouterEvent } from '@angular/router';
 import { Subscription } from 'rxjs';
 
-import { AuthenticationService, IeWarningService, imx_SessionService, ImxTranslationProviderService, ISessionState, MenuService, SplashService, SystemInfoService } from 'qbm';
+import { AuthenticationService, IeWarningService, ImxTranslationProviderService, ISessionState, MenuService, SplashService, SystemInfoService } from 'qbm';
 
 import { ProjectConfigurationService, UserModelService, SettingsComponent, QerApiService } from 'qer';
 
-import { PortalAdminPerson, ProfileSettings, QerProjectConfig } from 'imx-api-qer';
+import { ProfileSettings, QerProjectConfig } from 'imx-api-qer';
 import { ProjectConfig } from 'imx-api-qbm';
 import { MatDialog } from '@angular/material/dialog';
 import { EuiLoadingService, EuiTheme, EuiThemeService, EuiTopNavigationItem } from '@elemental-ui/core';
@@ -51,12 +51,10 @@ export class AppComponent implements OnInit, OnDestroy {
   public hideMenu = false;
   public hideUserMessage = false;
   public showPageContent = true;
-  public portalPersonAdmin: any;
 
   private readonly subscriptions: Subscription[] = [];
 
   constructor(
-    private readonly sessionService: imx_SessionService,
     private readonly authentication: AuthenticationService,
     private readonly router: Router,
     private readonly splash: SplashService,
@@ -154,14 +152,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
 
   public async ngOnInit(): Promise<void> {
-    const myArray = ['home', 'about', 'contact'];
-    this.generateNavigationMethods(myArray);
-    this.userId = (await this.sessionService.getSessionState()).UserUid;
-    this.portalPersonAdmin = (await this.qerClient.typedClient.PortalPersonMasterdataInteractive.Get_byid(this.userId));
-    const test = this.qerClient.typedClient.PortalPersonMasterdataInteractive.GetSchema().Columns;
-    const test2 = this.portalPersonAdmin = (await this.qerClient.typedClient.PortalPersonMasterdataInteractive.Get_byid(this.userId));
-    this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue(JSON.parse);
-    console.log("This is the testvalue: ",test2);
     this.authentication.update();
   }
 

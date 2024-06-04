@@ -18,7 +18,7 @@ export class BookmarkService implements OnInit {
 
   ngOnInit() {
     this.extService.register('Bookmark', { instance: BookmarkComponent })
-    
+
   }
 
   getCurrentRoute(): string {
@@ -76,12 +76,4 @@ export class BookmarkService implements OnInit {
     return Array.from(rowMap.values());
   }
 
-
-  // Method to dynamically generate void functions for each router link
-  generateGoToFunction(routerLink: string): () => void {
-    return () => {
-      const parts = routerLink.split('/').filter(part => part !== '');
-      this.router.navigate(parts);
-    };
-  }
 }
