@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 })
 export class BookmarkService implements OnInit {
   routerLinks: string[][] = [];
+  links: string[] = [];
   private MAX_URL_LENGTH = 2048;  // Example maximum length, adjust as needed
 
   constructor(
@@ -17,6 +18,7 @@ export class BookmarkService implements OnInit {
   ) { }
 
   ngOnInit() {
+
     this.extService.register('Bookmark', { instance: BookmarkComponent })
 
   }
@@ -25,8 +27,20 @@ export class BookmarkService implements OnInit {
     return this.router.url;
   }
 
+  saveLink(url: string, existingLinks: string[]) {
+    console.log("This is the Routerlink: ", this.router.url);
+    if (!this.links.includes(url) && !existingLinks.includes(url)) {
+      this.links.push(url);
+      console.log("Item was pushed")
+    }
+    console.log("Item was not pushed")
+
+    console.log('Router Links', this.links);
+  }
+
   // Method to save router link to array, checking against existingLinks
   saveRouterLink(url: string) {
+    console.log("This is the Routerlink: ", this.router.url);
     if (url.length > this.MAX_URL_LENGTH) {
       console.warn('URL is too long to be saved:', url);
       return;
@@ -47,6 +61,9 @@ export class BookmarkService implements OnInit {
       this.routerLinks.push(parts);
       console.log('Router Links Array:', this.routerLinks);
     }
+  }
+  getLinksArray(): string[]{
+    return this.links;
   }
 
   // Method to get router links array

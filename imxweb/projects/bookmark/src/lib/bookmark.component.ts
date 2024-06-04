@@ -14,7 +14,7 @@ export class BookmarkComponent implements OnInit {
   public userId: string;
   public portalPersonAdmin: any;
   public portalPerson: PortalPersonMasterdata;
-  existingLinks: string[][] = [];
+  existingLinks: string[] = [];
 
   constructor(
     private bookmarkService: BookmarkService,
@@ -27,15 +27,14 @@ export class BookmarkComponent implements OnInit {
     this.existingLinks = this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue(JSON.parse);
     const test = this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue(JSON.parse);
     const currentLink = this.bookmarkService.getCurrentRoute();
-
+    this.bookmarkService.saveLink(currentLink, this.existingLinks);
     this.bookmarkService.saveRouterLink(currentLink);
     console.log('Updated Router Links Array:', this.existingLinks);
+    const links = this.bookmarkService.getLinksArray();
+    //const routerLinksArray = this.bookmarkService.getRouterLinksArray();
+    //const mergedArray = this.bookmarkService.compareAndMergeArrays(this.existingLinks, this.bookmarkService.getRouterLinksArray());
 
-    const routerLinksArray = this.bookmarkService.getRouterLinksArray();
-
-    const mergedArray = this.bookmarkService.compareAndMergeArrays(this.existingLinks, this.bookmarkService.getRouterLinksArray());
-
-    this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").PutValue(JSON.stringify(mergedArray));
+    this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").PutValue(JSON.stringify(links));
     this.portalPersonAdmin.Data[0].GetEntity().Commit(true);
   }
 

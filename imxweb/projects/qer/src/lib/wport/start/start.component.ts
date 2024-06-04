@@ -50,7 +50,7 @@ export class StartComponent implements OnInit {
   public userUid: string;
   public portalPersonAdmin: any;
   public userId: string;
-  existingLinks: string[][] = [];
+  existingLinks: string[] = [];
 
   constructor(
     private qerClient: QerApiService,
@@ -66,10 +66,7 @@ export class StartComponent implements OnInit {
   public async ngOnInit(): Promise<void> {
     this.userId = (await this.sessionService.getSessionState()).UserUid;
     this.portalPersonAdmin = (await this.qerClient.typedClient.PortalPersonMasterdataInteractive.Get_byid(this.userId));
-    //const test2 = this.portalPersonAdmin = (await this.qerClient.typedClient.PortalPersonMasterdataInteractive.Get_byid(this.userId));
-    const test3 = this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue(JSON.parse);
     this.existingLinks = this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue(JSON.parse);
-    console.log("This is the testvalue: ",test3);
     this.dashboardService.busyStateChanged.subscribe(busy => {
       this.viewReady = !busy;
       this.detectRef.detectChanges();
