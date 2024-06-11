@@ -49,8 +49,12 @@ export class StartComponent implements OnInit {
   public viewReady: boolean;
   public userUid: string;
   public portalPersonAdmin: any;
+  public temp : string;
   public userId: string;
-  existingLinks: string[] = [];
+  existingLinks: string;
+  testarray: string[] = [];
+  test2: string[] = [];
+  items: string[] = ["/dashboard","/delegation","/admin/dataexplorer/identities"];
 
   constructor(
     private qerClient: QerApiService,
@@ -60,19 +64,27 @@ export class StartComponent implements OnInit {
     private readonly systemInfoService: SystemInfoService,
     private readonly sessionService: imx_SessionService,
     private readonly detectRef: ChangeDetectorRef,
-    private readonly projectConfigurationService: ProjectConfigurationService
-  ) {}
+    private readonly projectConfigurationService: ProjectConfigurationService,
+  ) {
+    
+  }
 
   public async ngOnInit(): Promise<void> {
-    this.userId = (await this.sessionService.getSessionState()).UserUid;
-    this.portalPersonAdmin = (await this.qerClient.typedClient.PortalPersonMasterdataInteractive.Get_byid(this.userId));
-    this.existingLinks = this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue(JSON.parse);
     this.dashboardService.busyStateChanged.subscribe(busy => {
       this.viewReady = !busy;
       this.detectRef.detectChanges();
     });
     const busy = this.dashboardService.beginBusy();
     try {
+      this.userId = (await this.sessionService.getSessionState()).UserUid;
+      this.portalPersonAdmin = (await this.qerClient.typedClient.PortalPersonMasterdataInteractive.Get_byid(this.userId));
+      this.existingLinks = await this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue();
+      console.log(typeof this.existingLinks);
+      const test = this.existingLinks.slice(1,-1).split(",");
+      this.test2 = test.map(item => item.replace(/['"]/g, ''));
+      console.log(typeof this.existingLinks);
+      console.log(typeof this.test2);
+      //this.existingLinks.forEach((item)=> this.testarray.push(item));
       this.userConfig = await this.userModelSvc.getUserConfig();
       this.pendingItems = await this.userModelSvc.getPendingItems();
       this.projectConfig = await this.projectConfigurationService.getConfig();

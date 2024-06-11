@@ -79,15 +79,9 @@
 
     <imx-icon-tile data-imx-identifier="bookmark" [caption]="'#LDS#Bookmarks' | translate"
       [subtitle]="'#LDS#My marked Pages' | translate" [image]="'bookmark'">
-      <ng-template #ActionTemplate>
-        <!-- Write your
-                    <button mat-button color="primary" [attr.data-imx-identifier]="'imx-start-button-bookmark'" [routerLink]="route">{{ route.join('/') }}</button>
-          <span>Test</span>
-          <eui-icon size="m" icon="forward"></eui-icon> comments here -->
-        <div *ngFor="let existingLink of existingLinks">
-          <p>Test</p>
-        </div>
-      </ng-template>
+      <li *ngFor="let item of test2">
+        <a  [routerLink]="item">{{ item }}</a>
+      </li>
     </imx-icon-tile>
 
     <imx-icon-tile data-imx-identifier="start-tile-manage-passwords" *ngIf="viewReady && ShowPasswordMgmtTile()"
@@ -146,4 +140,5 @@
       [identifier]="'dashboard-requests'" (actionClick)="GoToDashboardRequests()"></imx-chart-tile>
     -->
   </div>
+
 </ng-container>
