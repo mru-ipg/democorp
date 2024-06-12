@@ -79,9 +79,14 @@
 
     <imx-icon-tile data-imx-identifier="bookmark" [caption]="'#LDS#Bookmarks' | translate"
       [subtitle]="'#LDS#My marked Pages' | translate" [image]="'bookmark'">
-      <li *ngFor="let item of test2">
-        <a  [routerLink]="item">{{ item }}</a>
-      </li>
+      <ng-template #ActionTemplate>
+        <li *ngFor="let item of test3">
+          <a (click)="navigateBookmark(item)">{{ item }}</a>
+          <button mat-button color="primary" data-imx-identifier="navigate-bookmark-button" (click)="navigateBookmark(item)">
+            <eui-icon size="m" icon="forward"></eui-icon>
+          </button>
+        </li>
+      </ng-template>
     </imx-icon-tile>
 
     <imx-icon-tile data-imx-identifier="start-tile-manage-passwords" *ngIf="viewReady && ShowPasswordMgmtTile()"
