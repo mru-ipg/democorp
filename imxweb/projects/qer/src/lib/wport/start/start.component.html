@@ -77,23 +77,6 @@
       </ng-template>
     </imx-icon-tile>
 
-    <imx-bookmark-tile data-imx-identifier="bookmark" [caption]="'#LDS#Bookmarks' | translate"
-      [subtitle]="'#LDS#My marked Pages' | translate" [image]="'bookmark'" class="bookmark">
-      <ng-template #ActionTemplate class="bookmark">
-        <div style="display: flex; flex-direction: column;">
-          <ul>
-            <li *ngFor="let item of test2; let index = index" style="display: block;">
-              <a (click)="navigateBookmark(item, index)">{{ item }}</a>
-              <button mat-button color="primary" data-imx-identifier="navigate-bookmark-button"
-                id="bookmark-button" (click)="navigateBookmark(item)">
-                <eui-icon size="m" icon="forward"></eui-icon>
-              </button>
-            </li>
-          </ul>
-        </div>
-      </ng-template>
-    </imx-bookmark-tile>
-
     <imx-icon-tile data-imx-identifier="start-tile-manage-passwords" *ngIf="viewReady && ShowPasswordMgmtTile()"
       [caption]="'#LDS#Heading Passwords' | translate"
       [subtitle]="'#LDS#Create and manage passwords, password questions, and security keys.' | translate"
@@ -150,5 +133,21 @@
       [identifier]="'dashboard-requests'" (actionClick)="GoToDashboardRequests()"></imx-chart-tile>
     -->
   </div>
+  <imx-bookmark-tile data-imx-identifier="bookmark" [caption]="'#LDS#Bookmarks' | translate"
+    [subtitle]="'#LDS#My marked Pages' | translate" [image]="'bookmark'" class="bookmark">
+    <ng-template #ActionTemplate class="bookmark">
+      <div style="display: flex; flex-direction: column;">
+        <ul style="justify-content: space-between;">
+          <li *ngFor="let item of test2; let index = index" style="display: block;">
+            <a (click)="navigateBookmark(item, index)">{{ item }}</a>
+            <button mat-button color="primary" data-imx-identifier="navigate-bookmark-button" id="bookmark-button"
+              (click)="navigateBookmark(item)">
+              <eui-icon size="m" icon="forward"></eui-icon>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </ng-template>
+  </imx-bookmark-tile>
 
 </ng-container>
