@@ -49,13 +49,13 @@ export class StartComponent implements OnInit {
   public viewReady: boolean;
   public userUid: string;
   public portalPersonAdmin: any;
-  public temp : string;
+  public temp: string;
   public userId: string;
   existingLinks: string;
   testarray: string[] = [];
   test2: string[] = [];
   test3: string[] = [];
-  items: string[] = ["/dashboard","/delegation","/admin/dataexplorer/identities"];
+  items: string[] = ["/dashboard", "/delegation", "/admin/dataexplorer/identities"];
 
   constructor(
     private qerClient: QerApiService,
@@ -67,7 +67,7 @@ export class StartComponent implements OnInit {
     private readonly detectRef: ChangeDetectorRef,
     private readonly projectConfigurationService: ProjectConfigurationService,
   ) {
-    
+
   }
 
   convertArray(routes: string[]): string[] {
@@ -93,7 +93,7 @@ export class StartComponent implements OnInit {
       this.portalPersonAdmin = (await this.qerClient.typedClient.PortalPersonMasterdataInteractive.Get_byid(this.userId));
       this.existingLinks = await this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue();
       console.log(typeof this.existingLinks);
-      const test = this.existingLinks.slice(1,-1).split(",");
+      const test = this.existingLinks.slice(1, -1).split(",");
       this.test2 = test.map(item => item.replace(/['"]/g, ''));
       console.log(typeof this.existingLinks);
       console.log(this.test2);
@@ -110,15 +110,14 @@ export class StartComponent implements OnInit {
     }
   }
 
-  public navigateBookmark(url: string): void {
-      if (url.includes(',')) {
-         url.slice(1, -1);
-         this.router.navigate([url]);
-         console.log("I am being activated", url);
-      }
-      else{
-        this.router.navigate([url]);
-      }
+  public navigateBookmark(url: any, index: number): void {
+    if (url.includes(',' || '"')) {
+      this.router.navigate(url[index]);
+      console.log("This is the type", typeof url);
+      console.log("This is the url", url);
+    }
+    this.router.navigate([url]);
+    console.log(typeof url);
   }
 
   public ShowPasswordTile(): boolean {
@@ -130,7 +129,7 @@ export class StartComponent implements OnInit {
   }
 
   public GoToMyPassword(): void {
-    this.router.navigate(['profile', 'profile-password-questions']);
+    this.router.navigate(['admin', 'dataexplorer', 'identities']);
   }
 
   public GoToPasswordMgmtWeb(): void {
@@ -150,7 +149,7 @@ export class StartComponent implements OnInit {
   }
 
   public GoToItShopApprovalInquiries(): void {
-    this.router.navigate(['itshop', 'approvals'], {queryParams: {inquiries:true}});
+    this.router.navigate(['itshop', 'approvals'], { queryParams: { inquiries: true } });
   }
 
   public GoToMyProcesses(): void {

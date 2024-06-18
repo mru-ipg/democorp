@@ -80,8 +80,8 @@
     <imx-icon-tile data-imx-identifier="bookmark" [caption]="'#LDS#Bookmarks' | translate"
       [subtitle]="'#LDS#My marked Pages' | translate" [image]="'bookmark'">
       <ng-template #ActionTemplate>
-        <li *ngFor="let item of test3">
-          <a (click)="navigateBookmark(item)">{{ item }}</a>
+        <li *ngFor="let item of test2; let index = index">
+          <a (click)="navigateBookmark(item, index)">{{ item }}</a>
           <button mat-button color="primary" data-imx-identifier="navigate-bookmark-button" (click)="navigateBookmark(item)">
             <eui-icon size="m" icon="forward"></eui-icon>
           </button>
