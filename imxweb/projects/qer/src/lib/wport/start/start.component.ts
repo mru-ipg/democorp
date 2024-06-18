@@ -79,10 +79,8 @@ export class StartComponent implements OnInit {
       this.userId = (await this.sessionService.getSessionState()).UserUid;
       this.portalPersonAdmin = (await this.qerClient.typedClient.PortalPersonMasterdataInteractive.Get_byid(this.userId));
       this.existingLinks = await this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue();
-      console.log(typeof this.existingLinks);
       const test = this.existingLinks.slice(1, -1).split(",");
       this.test2 = test.map(item => item.replace(/['"]/g, ''));
-      console.log(typeof this.existingLinks);
       //this.existingLinks.forEach((item)=> this.testarray.push(item));
       this.userConfig = await this.userModelSvc.getUserConfig();
       this.pendingItems = await this.userModelSvc.getPendingItems();

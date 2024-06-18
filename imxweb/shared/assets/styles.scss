@@ -1,6 +1,15 @@
 @import 'variables';
 @import '@elemental-ui/core/src/styles/_eui_palette.scss';
 
+/*Start Styling Custom Elements*/
+.bookmark-list {
+  overflow-y: hidden;
+  background-color: green;
+}
+
+
+/*End Styling Custom Elements*/
+
 /* Elemental UI */
 .imx-eui-icon {
   margin: 10px;

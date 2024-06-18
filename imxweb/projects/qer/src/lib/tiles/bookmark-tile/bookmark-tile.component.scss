@@ -2,7 +2,7 @@
 @import "../../../../../qbm/src/lib/tile/tile-variables.scss";
 
 :host > ::ng-deep imx-tile .mat-card {
-  height: 140px;
+  height: auto;
   display: flex;
   width: $tile-width;
   min-width: $tile-width;
@@ -13,7 +13,6 @@
 }
 
 :host > ::ng-deep imx-tile .mat-card > .mat-card-actions:last-child {
-  height: auto;
   margin-bottom: 0;
   margin-left: -16px;
   margin-top: -10px;
@@ -63,12 +62,4 @@
   justify-content: center;
   height: 100%;
   width: 100%;
-}
-
-.bookmark{
-  height: 50px;
-}
-.bookmark ul {
-  height: 50; 
-  overflow-y: scroll;
 }

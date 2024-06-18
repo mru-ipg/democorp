@@ -36,13 +36,16 @@ import { TileModule } from 'qbm';
 import { NotificationTileComponent } from './notification-tile/notification-tile.component';
 import { IconTileComponent } from './icon-tile/icon-tile.component';
 import { BadgeTileComponent } from './badge-tile/badge-tile.component';
+import { BookmarkTileComponent } from './bookmark-tile/bookmark-tile.component';
 
 
 @NgModule({
   declarations: [
     NotificationTileComponent,
     BadgeTileComponent,
-    IconTileComponent
+    IconTileComponent,
+    BookmarkTileComponent
+
   ],
   imports: [
     CommonModule,
@@ -56,7 +59,8 @@ import { BadgeTileComponent } from './badge-tile/badge-tile.component';
   exports: [
     NotificationTileComponent,
     BadgeTileComponent,
-    IconTileComponent
+    IconTileComponent,
+    BookmarkTileComponent
   ]
 
 })

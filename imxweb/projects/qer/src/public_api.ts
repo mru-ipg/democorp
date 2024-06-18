@@ -1,3 +1,4 @@
+import { BookmarkTileComponent } from './lib/tiles/bookmark-tile/bookmark-tile.component';
 /*
  * ONE IDENTITY LLC. PROPRIETARY INFORMATION
  *
@@ -55,6 +56,7 @@ export { NotificationStreamService } from './lib/notifications/notification-stre
 export { NotificationTileComponent } from './lib/tiles/notification-tile/notification-tile.component';
 export { BadgeTileComponent } from './lib/tiles/badge-tile/badge-tile.component';
 export { IconTileComponent } from './lib/tiles/icon-tile/icon-tile.component';
+export { BookmarkTileComponent} from './lib/tiles/bookmark-tile/bookmark-tile.component';
 export { IdentitiesService } from './lib/identities/identities.service';
 export {
   IdentityRoleMembershipsParameter,
