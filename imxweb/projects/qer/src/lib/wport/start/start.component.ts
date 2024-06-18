@@ -54,8 +54,7 @@ export class StartComponent implements OnInit {
   existingLinks: string;
   testarray: string[] = [];
   test2: string[] = [];
-  test3: string[] = [];
-  items: string[] = ["/dashboard", "/delegation", "/admin/dataexplorer/identities"];
+
 
   constructor(
     private qerClient: QerApiService,
@@ -69,18 +68,6 @@ export class StartComponent implements OnInit {
   ) {
 
   }
-
-  convertArray(routes: string[]): string[] {
-    return routes.map(route => {
-      const parts = route.split('/').filter(part => part);
-      if (parts.length > 1) {
-        return parts.map(part => `'${part}'`).join(',');
-      } else {
-        return parts.join();
-      }
-    });
-  }
-
 
   public async ngOnInit(): Promise<void> {
     this.dashboardService.busyStateChanged.subscribe(busy => {
@@ -96,9 +83,6 @@ export class StartComponent implements OnInit {
       const test = this.existingLinks.slice(1, -1).split(",");
       this.test2 = test.map(item => item.replace(/['"]/g, ''));
       console.log(typeof this.existingLinks);
-      console.log(this.test2);
-      this.test3 = this.convertArray(this.test2);
-      console.log(this.test3);
       //this.existingLinks.forEach((item)=> this.testarray.push(item));
       this.userConfig = await this.userModelSvc.getUserConfig();
       this.pendingItems = await this.userModelSvc.getPendingItems();
