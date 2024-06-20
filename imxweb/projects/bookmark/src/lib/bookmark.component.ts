@@ -19,6 +19,7 @@ export class BookmarkComponent implements OnInit {
   existingLinks: string[] = [];
   included: boolean;
   iconValue: string;
+  url: string;
 
   constructor(
     private bookmarkService: BookmarkService,
@@ -26,53 +27,30 @@ export class BookmarkComponent implements OnInit {
     private qerClient: QerApiService,
     private router: Router
   ) {
+    this.url = this.bookmarkService.getCurrentRoute();
   }
 
   public async addRouterLink() {
     this.existingLinks = this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue(JSON.parse);
-    const currentLink = this.bookmarkService.getCurrentRoute();
     console.log('Updated Router Links Array:', this.existingLinks);
-    let url = this.bookmarkService.getCurrentRoute();
-    this.included = this.bookmarkService.checkState(url, this.existingLinks);
-    if (this.included = false) {
-      this.iconValue = "openbookmark"
-    }
-    if (this.included = true) {
-      this.iconValue = "bookmark"
-    }
-    this.bookmarkService.saveLink(currentLink, this.existingLinks, this.included, this.iconValue);
-    const links = this.bookmarkService.getLinksArray();
-    this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").PutValue(JSON.stringify(links));
+    this.bookmarkService.checkState(this.url, this.existingLinks, this.iconValue,  this.included);
+    this.bookmarkService.updateBookmarks(this.url, this.existingLinks,this.iconValue,  this.included);
+    this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").PutValue(JSON.stringify(this.existingLinks));
     this.portalPersonAdmin.Data[0].GetEntity().Commit(true);
   }
 
   async ngOnInit(): Promise<void> {
-    
-    console.log(this.included);
     this.userId = (await this.sessionService.getSessionState()).UserUid;
     this.portalPersonAdmin = (await this.qerClient.typedClient.PortalPersonMasterdataInteractive.Get_byid(this.userId));
     this.existingLinks = this.portalPersonAdmin.Data[0].GetEntity().GetColumn("CustomProperty09").GetValue(JSON.parse);
-    let url = this.bookmarkService.getCurrentRoute();
-    this.included = this.bookmarkService.checkState(url, this.existingLinks);
-    if (this.included = false) {
-      this.iconValue = "openbookmark"
-    }
-    if (this.included = true) {
-      this.iconValue = "bookmark"
-    }
-
+    this.bookmarkService.checkState(this.url, this.existingLinks, this.iconValue,  this.included);
+    this.bookmarkService.initializeBookmarks(this.iconValue,this.included);
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: NavigationEnd) => {
       console.log('Route changed to:', event.urlAfterRedirects);
-      let url = this.bookmarkService.getCurrentRoute();
-      this.included = this.bookmarkService.checkState(url, this.existingLinks);
-      if (this.included = false) {
-        this.iconValue = "openbookmark"
-      }
-      if (this.included = true) {
-        this.iconValue = "bookmark"
-      }
+      this.bookmarkService.checkState(this.url, this.existingLinks, this.iconValue,  this.included)
+      this.bookmarkService.initializeBookmarks(this.iconValue,this.included);
     });
 
     console.log("Bookmark Component Loaded")
