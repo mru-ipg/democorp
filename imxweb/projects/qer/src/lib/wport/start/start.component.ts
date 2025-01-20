@@ -35,6 +35,7 @@ import { imx_SessionService, SystemInfoService } from 'qbm';
 import { SystemInfo } from 'imx-api-qbm';
 import { DashboardService } from './dashboard.service';
 import { QerApiService } from '../../qer-api-client.service';
+import {AzureAdService} from 'imx-api-aad'
 
 @Component({
   templateUrl: './start.component.html',
@@ -58,7 +59,9 @@ export class StartComponent implements OnInit {
     private readonly sessionService: imx_SessionService,
     private readonly detectRef: ChangeDetectorRef,
     private readonly projectConfigurationService: ProjectConfigurationService,
-    private readonly qerClient: QerApiService
+    private readonly qerClient: QerApiService,
+    private readonly aadGroupService: AzureAdService 
+
   ) {}
 
   public async ngOnInit(): Promise<void> {

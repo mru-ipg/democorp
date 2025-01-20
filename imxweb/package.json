@@ -105,6 +105,7 @@
   },
   "optionalDependencies": {
     "imx-api-aad": "file:imx-modules/imx-api-aad.tgz",
+    "imx-api-adacc": "file:imx-modules/imx-api-adacc.tgz",
     "imx-api-aob": "file:imx-modules/imx-api-aob.tgz",
     "imx-api-apc": "file:imx-modules/imx-api-apc.tgz",
     "imx-api-att": "file:imx-modules/imx-api-att.tgz",
@@ -123,8 +124,7 @@
     "imx-api-sac": "file:imx-modules/imx-api-sac.tgz",
     "imx-api-tsb": "file:imx-modules/imx-api-tsb.tgz",
     "imx-api-uci": "file:imx-modules/imx-api-uci.tgz",
-    "imx-qbm-dbts": "file:imx-modules/imx-qbm-dbts.tgz",
-    "imx-api-adacc": "file:imx-modules/imx-api-adacc.tgz"
+    "imx-qbm-dbts": "file:imx-modules/imx-qbm-dbts.tgz"
   },
   "overrides": {
     "@babel/traverse": "7.22.6"
