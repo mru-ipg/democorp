@@ -34,8 +34,11 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { EuiCoreModule, EuiMaterialModule } from '@elemental-ui/core';
 import { MissingTranslationHandler, TranslateLoader, TranslateModule, TranslateService } from '@ngx-translate/core';
 import { LoggerModule, NgxLoggerLevel } from 'ngx-logger';
+import { CustomPluginModule } from 'projects/custom-plugin/src/lib/custom-plugin.module';
+
 
 import {
+
   AuthenticationModule,
   CdrRegistryService,
   CustomThemeModule,
@@ -51,6 +54,7 @@ import {
   UserMessageModule,
 } from 'qbm';
 import {
+
   AddressbookModule,
   ApprovalsModule,
   ArchivedRequestsModule,
@@ -104,6 +108,7 @@ export function getBaseHref(): string {
     AuthenticationModule,
     BrowserAnimationsModule,
     BrowserModule,
+    CustomPluginModule,
     EuiCoreModule,
     EuiMaterialModule,
     HttpClientModule,

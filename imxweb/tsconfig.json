@@ -25,7 +25,12 @@
         "dist/aob/*"
       ],
       "bookmark": ["dist/bookmark"],
-      "bookmark/*": ["dist/bookmark/*"],
+      "bookmark/*": [
+        "dist/bookmark/*"
+      ],
+      "custom-plugin": [
+        "dist/custom-plugin"
+      ],
       "tsb": ["dist/tsb"],
       "tsb/*": ["dist/tsb/*"],
       "att": ["dist/att"],

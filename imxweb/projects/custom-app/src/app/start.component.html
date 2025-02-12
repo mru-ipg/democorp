@@ -3,6 +3,9 @@
   <div mat-card-title>Hello world!</div>
 
   <button mat-raised-button color="primary" (click)="loadPersonData()">Fetch some person data...</button>
+  
+  <imx-ext class="imx-flexible-tile-row" id="Dashboard-SmallTiles" [referrer]="this"></imx-ext>
+
 
   <mat-spinner *ngIf="busy"></mat-spinner>
 
