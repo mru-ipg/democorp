@@ -74,7 +74,7 @@ export class AttestationHistoryComponent implements OnInit, OnDestroy {
   @Input() public parameters: { objecttable: string; objectuid: string; filter?: FilterData[] };
   @Input() public itemStatus: DataSourceItemStatus = { enabled: (__) => true };
   @Input() public withAssignmentAnalysis: boolean = false;
-  @Input() public selectable : boolean = true;
+  @Input() public selectable: boolean = true;
 
   @ViewChild('attestorFilter', { static: false }) public attestorFilter: AttestationHistoryFilterComponent;
 
@@ -172,7 +172,7 @@ export class AttestationHistoryComponent implements OnInit, OnDestroy {
         this.navigationState.OrderBy = 'ToSolveTill';
       }
 
-      await this.getData();
+      await this.getData(undefined, true);
     } finally {
       setTimeout(() => {
         isBusy.endBusy();
@@ -197,20 +197,26 @@ export class AttestationHistoryComponent implements OnInit, OnDestroy {
   }
 
   public async onSearch(search: string): Promise<void> {
+    this.historyService.abortCall();
     return this.getData({ search });
   }
 
-  public async onGroupingChange(groupKey: string): Promise<void> {
+  public async onGroupingChange(groupInfo: { key: string; isInitial: boolean }): Promise<void> {
     const isBusy = this.busyService.beginBusy();
 
     try {
-      const groupedData = this.groupedData[groupKey];
-      let filter = groupedData.navigationState?.filter;
-      if (this.parameters?.filter) {
-        filter = [...(groupedData.navigationState?.filter ?? []), ...(this.parameters?.filter ?? [])].filter((elem) => elem != null);
+      const groupedData = this.groupedData[groupInfo.key];
+      if (groupInfo.isInitial) {
+        groupedData.data = { totalCount: 0, Data: [] };
+      } else {
+        let filter = groupedData.navigationState?.filter;
+        if (this.parameters?.filter) {
+          filter = [...(groupedData.navigationState?.filter ?? []), ...(this.parameters?.filter ?? [])].filter((elem) => elem != null);
+        }
+        const navigationState = { ...groupedData.navigationState, filter };
+        groupedData.data = await this.historyService.getAttestations(navigationState);
       }
-      const navigationState = { ...groupedData.navigationState, filter };
-      groupedData.data = await this.historyService.getAttestations(navigationState);
+
       groupedData.settings = {
         displayedColumns: this.dstSettings.displayedColumns,
         dataModel: this.dstSettings.dataModel,
@@ -223,7 +229,7 @@ export class AttestationHistoryComponent implements OnInit, OnDestroy {
     }
   }
 
-  public async getData(newState?: AttestationCaseLoadParameters): Promise<void> {
+  public async getData(newState?: AttestationCaseLoadParameters, isInitialLoad: boolean = false): Promise<void> {
     this.navigationState = {
       ...(this.dstSettings?.navigationState ?? this.navigationState),
       uid_persondecision: this.attestorFilter?.selectedUid,
@@ -233,7 +239,7 @@ export class AttestationHistoryComponent implements OnInit, OnDestroy {
     const isBusy = this.busyService.beginBusy();
 
     try {
-      const data = await this.historyService.getAttestations(this.navigationState);
+      const data = isInitialLoad ? { totalCount: 0, Data: [] } : await this.historyService.getAttestations(this.navigationState);
       const exportMethod = this.historyService.exportAttestation(this.navigationState);
       exportMethod.initialColumns = this.displayedColumns.map((col) => col.ColumnName);
       if (data) {
@@ -251,8 +257,6 @@ export class AttestationHistoryComponent implements OnInit, OnDestroy {
           viewConfig: this.viewConfig,
           exportMethod,
         };
-      } else {
-        this.dstSettings = undefined;
       }
     } finally {
       isBusy.endBusy();
@@ -314,10 +318,8 @@ export class AttestationHistoryComponent implements OnInit, OnDestroy {
   }
 
   public async viewAssignmentAnalysis(event: Event, attestationCase: AttestationHistoryCase): Promise<void> {
-
     event.stopPropagation();
     const uidPerson = attestationCase.UID_Person.value;
-
     const objectKey = DbObjectKey.FromXml(attestationCase.ObjectKeyBase.value);
 
     const data: SourceDetectiveSidesheetData = {

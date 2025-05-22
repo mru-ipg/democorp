@@ -24,11 +24,10 @@
  *
  */
 
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { AbstractControl, UntypedFormControl, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 
-import moment from 'moment-timezone';
-import { Moment } from 'moment-timezone';
+import moment, { Moment } from 'moment-timezone';
 import { Subscription } from 'rxjs';
 import { ClassloggerService } from '../../classlogger/classlogger.service';
 import { DateParser } from './date-parser';
@@ -44,7 +43,7 @@ import { DateParser } from './date-parser';
 @Component({
   selector: 'imx-date',
   templateUrl: './date.component.html',
-  styleUrls: ['./date.component.scss']
+  styleUrls: ['./date.component.scss'],
 })
 export class DateComponent implements OnInit, OnDestroy {
   // ######################################################################################################
@@ -114,6 +113,11 @@ export class DateComponent implements OnInit, OnDestroy {
    */
   @Input() public withTime = true;
 
+  @Input() validateOnlyOnChange: boolean = false;
+
+  /*Emits an event, when the user changed something in the UI, by closing dialogs or when focus is lost */
+  @Output() manuallyChanged: EventEmitter<void> = new EventEmitter();
+
   /**
    * @ignore only public because of databinding in template
    *
@@ -150,11 +154,22 @@ export class DateComponent implements OnInit, OnDestroy {
   public shadowTime = new UntypedFormControl();
 
   /**
+   * Closes all picker and emits the manually changed event.
+   */
+  public handleClose(): void {
+    this.isDatePickerOpen = false;
+    this.isTimePickerOpen = false;
+    this.manuallyChanged.emit();
+  }
+
+  /**
    * @ignore
    * the result of the internal shadow form control.
-   * Useful to avoid unecessay update loop when writing back the value to the input control.
+   * Useful to avoid unnecessary update loop when writing back the value to the input control.
    */
   private result: Moment;
+
+  private isUpdated: boolean = false;
 
   /**
    * @ignore
@@ -168,15 +183,14 @@ export class DateComponent implements OnInit, OnDestroy {
    *
    * The text <-> moment date and time parser.
    */
-  private parser !: DateParser;
+  private parser!: DateParser;
 
   /**
    * Creates a new date editor component.
    *
    * @param logger The logger service to be injected.
    */
-  constructor(private logger: ClassloggerService) {
-  }
+  constructor(private logger: ClassloggerService) {}
 
   /**
    * @ignore only public because of databinding in template
@@ -214,17 +228,25 @@ export class DateComponent implements OnInit, OnDestroy {
     this.setupValidators();
     this.handleControlChanged();
 
-    this.subscriptions.push(this.control.valueChanges.subscribe(x => this.handleControlChanged()));
-    this.subscriptions.push(this.shadowText.valueChanges.subscribe(x => this.handleShadowTextChanged()));
-    this.subscriptions.push(this.shadowTime.valueChanges.subscribe(x => this.handleShadowTimeChanged()));
-    this.subscriptions.push(this.shadowDate.valueChanges.subscribe(x => this.handleShadowDateChanged()));
+    this.subscriptions.push(
+      this.control.valueChanges.subscribe((x) => {
+        if (this.shadowText.untouched) {
+          this.shadowText.markAsTouched();
+        }
+        this.isUpdated = true;
+        this.handleControlChanged();
+      })
+    );
+    this.subscriptions.push(this.shadowText.valueChanges.subscribe((x) => this.handleShadowTextChanged()));
+    this.subscriptions.push(this.shadowTime.valueChanges.subscribe((x) => this.handleShadowTimeChanged()));
+    this.subscriptions.push(this.shadowDate.valueChanges.subscribe((x) => this.handleShadowDateChanged()));
   }
 
   /**
    * @ignore OnDestroy lifecycle hook
    */
   public ngOnDestroy(): void {
-    this.subscriptions.forEach(s => s.unsubscribe());
+    this.subscriptions.forEach((s) => s.unsubscribe());
   }
 
   /**
@@ -279,6 +301,7 @@ export class DateComponent implements OnInit, OnDestroy {
 
   public focusout(): void {
     this.handleShadowTimeChanged();
+    this.manuallyChanged.emit();
   }
 
   /**
@@ -320,7 +343,7 @@ export class DateComponent implements OnInit, OnDestroy {
 
     if (this.shadowDate.value) {
       const d = moment(this.shadowDate.value);
-      value = moment({year: d.year(), month: d.month(), day: d.date()});
+      value = moment({ year: d.year(), month: d.month(), day: d.date() });
     }
 
     if (this.shadowTime.value) {
@@ -456,6 +479,9 @@ export class DateComponent implements OnInit, OnDestroy {
    * validation method: validates the moment representation of a date (and time)
    */
   private validateMomentInDateRange(date: Moment): ValidationErrors | null {
+    if (!this.isUpdated && this.validateOnlyOnChange) {
+      return null;
+    }
     if (date && !date.isValid()) {
       return { matDatepickerParse: true };
     }
@@ -467,6 +493,7 @@ export class DateComponent implements OnInit, OnDestroy {
     if (this.max && date > moment(this.max)) {
       return { matDatepickerMax: true };
     }
-  }
 
+    return null;
+  }
 }

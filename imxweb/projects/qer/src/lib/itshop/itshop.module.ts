@@ -31,8 +31,9 @@ import { MatCardModule } from '@angular/material/card';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatListModule } from '@angular/material/list';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+
 import { ShelfSelectionComponent } from './shelf-selection.component';
-import { BusyIndicatorModule, CdrModule, DataSourceToolbarModule, DataTableModule, DateModule, ExtModule, LdsReplaceModule, RouteGuardService } from 'qbm';
+import { BusyIndicatorModule, CdrModule, DataSourceToolbarModule, DataTableModule, DateModule, ExtModule, LdsReplaceModule } from 'qbm';
 import { ItshopService } from './itshop.service';
 import { DecisionHistoryComponent } from './request-info/decision-history.component';
 import { RequestInfoComponent } from './request-info/request-info.component';
@@ -43,19 +44,6 @@ import { ShelfService } from './shelf.service';
 import { ServiceItemDetailComponent } from './request-info/service-item-detail/service-item-detail.component';
 import { ProductEntitlementsComponent } from './request-info/service-item-detail/product-entitlements/product-entitlements.component';
 import { MatExpansionModule } from '@angular/material/expansion';
-import { SingleProductComponent } from './single-product/single-product.component';
-import { RouterModule, Routes } from '@angular/router';
-
-
-const routes: Routes = [
-  {
-    path: 'product/:id',
-    component: SingleProductComponent,
-    canActivate: [RouteGuardService],
-    resolve: [RouteGuardService],
-  },
-];
-
 @NgModule({
   declarations: [
     DecisionHistoryComponent,
@@ -64,8 +52,7 @@ const routes: Routes = [
     NonRequestableItemsComponent,
     PeerGroupComponent,
     ServiceItemDetailComponent,
-    ProductEntitlementsComponent,
-    SingleProductComponent
+    ProductEntitlementsComponent
   ],
   exports: [
     RequestInfoComponent,
@@ -90,8 +77,7 @@ const routes: Routes = [
     ExtModule,
     DateModule,
     DataTableModule,
-    DataSourceToolbarModule,
-    RouterModule.forChild(routes),
+    DataSourceToolbarModule
   ],
   providers: [
     ItshopService,

@@ -148,8 +148,9 @@
   }
 
   .imx-small-error {
-    font-size: small;
-    margin: -25px 0 20px 10px;
+    font-size: 12px;
+    margin-bottom: 12px;
+    margin-left: 1em;
   }
 
   .imx-delegation-success {
@@ -167,6 +168,15 @@
   .imx-global-elements {
     padding-left: 1em;
     overflow-y: auto;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+
+    imx-busy-indicator {
+      flex: 1 1 auto;
+      justify-content: center;
+      align-items: center;
+    }
   }
 
   .nr-roles {

@@ -24,7 +24,7 @@
  *
  */
 
-import { Component, Input, OnDestroy, OnInit, ViewChild, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
 import { EuiSidesheetService } from '@elemental-ui/core';
 import { TranslateService } from '@ngx-translate/core';
@@ -69,7 +69,7 @@ import { ViewConfigService } from '../view-config/view-config.service';
   styleUrls: ['./request-table.component.scss'],
   selector: 'imx-request-table',
 })
-export class RequestTableComponent implements OnInit, OnDestroy, OnChanges {
+export class RequestTableComponent implements OnInit, OnDestroy {
   public additional: IClientProperty[] = [];
   public get entitySchema(): EntitySchema {
     return this.requestHistoryService.PortalItshopRequestsSchema;
@@ -164,7 +164,7 @@ export class RequestTableComponent implements OnInit, OnDestroy, OnChanges {
     private readonly requestHistoryService: RequestHistoryService,
     private viewConfigService: ViewConfigService,
     private readonly session: imx_SessionService,
-    private readonly settingsService: SettingsService,
+    readonly settingsService: SettingsService,
     private readonly projectConfig: ProjectConfigurationService,
     private readonly activatedRoute: ActivatedRoute,
     private readonly ext: ExtService
@@ -187,12 +187,6 @@ export class RequestTableComponent implements OnInit, OnDestroy, OnChanges {
     );
   }
 
-  ngOnChanges() {
-    if (this.uidRecipient) {
-      this.getData();
-    }
-  }
-
   public async ngOnInit(): Promise<void> {
     this.displayedColumns = [
       this.entitySchema.Columns.DisplayOrg,
@@ -211,7 +205,7 @@ export class RequestTableComponent implements OnInit, OnDestroy, OnChanges {
       this.dataModel = await this.requestHistoryService.getDataModel(this.userUid);
       this.viewConfig = await this.viewConfigService.getInitialDSTExtension(this.dataModel, this.viewConfigPath);
       this.activatedRoute.queryParams.subscribe((params) => this.updateFiltersFromRouteParams(params));
-      this.filterOptions = await this.requestHistoryService.getFilterOptions(this.userUid, this.filterPresets);
+      this.filterOptions = await this.requestHistoryService.getFilterOptions(this.userUid, this.filterPresets, this.dataModel);
       this.itShopConfig = (await this.projectConfig.getConfig()).ITShopConfig;
 
       await this.getData(null, true);
@@ -264,6 +258,7 @@ export class RequestTableComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   public onSearch(keywords: string): Promise<void> {
+    this.requestHistoryService.abortCall();
     const navigationState = {
       ...this.navigationState,
       ...{
@@ -303,7 +298,7 @@ export class RequestTableComponent implements OnInit, OnDestroy, OnChanges {
 
       // We check here if we have a default config, if so then we will skip the init data to save time
       let data: ExtendedTypedEntityCollection<ItshopRequest, PwoExtendedData>;
-      if (isInit && this.viewConfigService.isDefaultConfigSet()) {
+      if (isInit) {
         // We don't waste time on the call as the view config hasn't been set yet.
         data = {
           totalCount: 0,
@@ -323,7 +318,7 @@ export class RequestTableComponent implements OnInit, OnDestroy, OnChanges {
       if (data) {
         const dstSettings: DataSourceToolbarSettings = {
           dataSource: {
-            totalCount: data.totalCount,
+            ...data,
             Data: data.Data ? this.sortChildrenAfterParents(data.Data) : undefined,
           },
           filters: this.filterOptions,
@@ -340,8 +335,6 @@ export class RequestTableComponent implements OnInit, OnDestroy, OnChanges {
         } else {
           this.dstSettings = dstSettings;
         }
-      } else {
-        this.dstSettings = undefined;
       }
     } finally {
       busy.endBusy();

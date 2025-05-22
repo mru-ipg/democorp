@@ -71,7 +71,7 @@ export class PoliciesComponent implements OnInit {
   public async ngOnInit(): Promise<void> {
     this.euiBusysService.show();
     try {
-      this.filterOptions = (await this.policiesProvider.getDataModel()).Filters;
+      this.filterOptions = (await this.policiesProvider.getDataModel()).Filters || [];
       this.isMControlPerViolation = (await this.policiesProvider.featureConfig()).MitigatingControlsPerViolation;
     } finally {
       this.euiBusysService.hide();
@@ -82,7 +82,7 @@ export class PoliciesComponent implements OnInit {
       this.filterOptions[indexActive].InitialValue = '1';
       this.navigationState.active = '1';
     }
-    await this.navigate({});
+    await this.navigate({}, true);
   }
 
   public async showDetails(selectedPolicy: PortalPolicies): Promise<void> {
@@ -105,22 +105,29 @@ export class PoliciesComponent implements OnInit {
       .toPromise();
   }
 
-  public async navigate(parameter: CollectionLoadParameters): Promise<void> {
+  public async navigate(parameter: CollectionLoadParameters, isInitialLoad: boolean = false): Promise<void> {
     const isBusy = this.busyService.beginBusy();
 
     this.navigationState = { ...this.navigationState, ...parameter };
 
     try {
-      const data = await this.policiesProvider.getPolicies(this.navigationState);
-      this.dstSettings = {
-        displayedColumns: this.displayedColumns,
-        dataSource: data,
-        entitySchema: this.policySchema,
-        navigationState: this.navigationState,
-        filters: this.filterOptions,
-      };
+      const data = isInitialLoad ? { totalCount: 0, Data: [] } : await this.policiesProvider.getPolicies(this.navigationState);
+      if (data) {
+        this.dstSettings = {
+          displayedColumns: this.displayedColumns,
+          dataSource: data,
+          entitySchema: this.policySchema,
+          navigationState: this.navigationState,
+          filters: this.filterOptions,
+        };
+      }
     } finally {
       isBusy.endBusy();
     }
+  }
+
+  public async onSearch(keywords: string): Promise<void> {
+    this.policiesProvider.abortCall();
+    return this.navigate({ search: keywords });
   }
 }

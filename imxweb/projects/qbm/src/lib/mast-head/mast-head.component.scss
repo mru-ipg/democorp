@@ -84,21 +84,6 @@
   }
 }
 
-.eui-light-theme {
-  :host {
-    ::ng-deep .eui-masthead {
-      background-color: $color-blue-80;
-    }
-
-    .mat-toolbar.mat-primary {
-      background-color: $color-blue-80;
-      color: $color-gray-0;
-    }
-  }
-}
-
-
-
 .eui-contrast-theme {
   :host {
     ::ng-deep .eui-masthead {

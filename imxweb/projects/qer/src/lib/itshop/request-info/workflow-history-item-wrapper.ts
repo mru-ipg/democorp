@@ -33,7 +33,7 @@ export class WorkflowHistoryItemWrapper {
   public readonly approver: ColumnDependentReference;
   public readonly columns: ColumnDependentReference[];
 
-  constructor(public readonly approveHistory: PortalItshopApproveHistory, public readonly decisionHistory: DecisionHistoryService) {
+  constructor(public readonly approveHistory: PortalItshopApproveHistory, public readonly decisionHistory: DecisionHistoryService,public readonly complianceRule?: string) {
     this.approver = this.createApproverCdr(this.approveHistory),
       this.columns = this.createCdrList(this.approveHistory);
   }
@@ -73,8 +73,14 @@ export class WorkflowHistoryItemWrapper {
     ];
 
     const customDisplays = {
-      UID_PersonRelated: historyItem.DecisionType.value === 'AddInsteadOf' ? '#LDS#Delegated approver' :
-        ['Query', 'AddAdditional'].includes(historyItem.DecisionType.value) ? '#LDS#Recipient' : undefined
+      UID_PersonRelated:
+        historyItem.DecisionType.value === 'AddInsteadOf'
+          ? '#LDS#Delegated approver'
+          : historyItem.DecisionType.value === 'AddAdditional'
+          ? '#LDS#Additional approver'
+          : historyItem.DecisionType.value === 'Query'
+          ? '#LDS#Recipient'
+          : undefined,
     };
 
     return properties.filter(property => this.isToView(property)).map(property =>

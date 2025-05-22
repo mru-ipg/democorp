@@ -35,7 +35,7 @@ import { Subscription } from 'rxjs/internal/Subscription';
 import { PortalItshopPeergroupMemberships, PortalShopServiceitems } from 'imx-api-qer';
 import { CollectionLoadParameters, DisplayColumns, IClientProperty, IWriteValue, MultiValue, ValueStruct } from 'imx-qbm-dbts';
 
-import { Busy, BusyService, DataSourceToolbarComponent, DataSourceToolbarSettings, FkAdvancedPickerComponent, HELP_CONTEXTUAL } from 'qbm';
+import { Busy, BusyService, DataSourceToolbarComponent, DataSourceToolbarSettings, FkAdvancedPickerComponent } from 'qbm';
 import { ItshopService } from '../../itshop/itshop.service';
 import { QerApiService } from '../../qer-api-client.service';
 import { CurrentProductSource } from '../current-product-source';
@@ -75,7 +75,6 @@ export class NewRequestReferenceUserComponent implements AfterViewInit, OnDestro
   public readonly busyService = new BusyService();
   public SelectedProductSource = SelectedProductSource;
   public selectedSource: SelectedProductSource;
-  public contextId = HELP_CONTEXTUAL.NewRequestReferenceUser;
   //#endregion
 
   constructor(
@@ -92,6 +91,7 @@ export class NewRequestReferenceUserComponent implements AfterViewInit, OnDestro
   ) {
     this.orchestration.selectedView = SelectedProductSource.ReferenceUserProducts;
     this.orchestration.selectedChip = 0;
+    this.orchestration.disableSearch = false;
 
     // CHECK Do we need this?
     this.orchestration.searchApi$.next(this.searchApi);
@@ -113,16 +113,18 @@ export class NewRequestReferenceUserComponent implements AfterViewInit, OnDestro
     //#region Sunscription
     this.subscriptions.push(
       this.orchestration.currentProductSource$.subscribe((source: CurrentProductSource) => {
-        this.selectedSource = source?.view;
+        this.selectedSource = this.orchestration.selectedView;
 
         if (source?.view === SelectedProductSource.ReferenceUserProducts) {
           this.productDst = source.dst;
           this.productDst.busyService = this.busyService;
           this.orchestration.dstSettingsReferenceUserProducts = this.productDstSettings;
           // this.getProductData();
-          this.subscriptions.push(this.selectionService.selectedProducts$.subscribe(() => {
-            this.orchestration.preselectBySource(SelectedProductSource.ReferenceUserProducts, this.productDst);
-          }));
+          this.subscriptions.push(
+            this.selectionService.selectedProducts$.subscribe(() => {
+              this.orchestration.preselectBySource(SelectedProductSource.ReferenceUserProducts, this.productDst);
+            })
+          );
           this.subscriptions.push(
             this.productDst.searchResults$.subscribe((data) => {
               if (data) {
@@ -143,9 +145,11 @@ export class NewRequestReferenceUserComponent implements AfterViewInit, OnDestro
           this.membershipDst = source.dst;
           this.membershipDst.busyService = this.busyService;
           this.orchestration.dstSettingsReferenceUserOrgs = this.membershipDstSettings;
-          this.subscriptions.push(this.selectionService.selectedProducts$.subscribe(() => {
-            this.orchestration.preselectBySource(SelectedProductSource.ReferenceUserOrgs, this.membershipDst);
-          }));
+          this.subscriptions.push(
+            this.selectionService.selectedProducts$.subscribe(() => {
+              this.orchestration.preselectBySource(SelectedProductSource.ReferenceUserOrgs, this.membershipDst);
+            })
+          );
           this.subscriptions.push(
             this.membershipDst.searchResults$.subscribe((data) => {
               if (data) {
@@ -155,7 +159,7 @@ export class NewRequestReferenceUserComponent implements AfterViewInit, OnDestro
                   entitySchema: this.membershipApi.PortalItshopPeergroupMembershipsSchema,
                   navigationState: this.membershipNavigationState,
                 };
-                this.orchestration.dstSettingsReferenceUserOrgs= this.membershipDstSettings;
+                this.orchestration.dstSettingsReferenceUserOrgs = this.membershipDstSettings;
               }
               this.busy.endBusy(true);
             })
@@ -186,7 +190,20 @@ export class NewRequestReferenceUserComponent implements AfterViewInit, OnDestro
       })
     );
 
-    this.subscriptions.push(this.orchestration.recipients$.subscribe((recipients: IWriteValue<string>) => (this.recipients = recipients)));
+    this.subscriptions.push(
+      this.orchestration.recipients$.subscribe(async (recipients: IWriteValue<string>) => {
+        this.recipients = recipients;
+
+        if (this.selectedChipIndex === 0 && this.selectedSource === SelectedProductSource.ReferenceUserProducts) {
+          this.orchestration.dstSettingsReferenceUserProducts = this.productDstSettings;
+          await this.getProductData();
+        }
+        if (this.selectedChipIndex === 1 && this.selectedSource === SelectedProductSource.ReferenceUserOrgs) {
+          this.orchestration.dstSettingsReferenceUserOrgs = this.membershipDstSettings;
+          await this.getMembershipData();
+        }
+      })
+    );
 
     this.subscriptions.push(
       this.router.events.subscribe(async (event: any) => {
@@ -260,7 +277,7 @@ export class NewRequestReferenceUserComponent implements AfterViewInit, OnDestro
       return;
     }
 
-    this.orchestration.referenceUser = user
+    this.orchestration.referenceUser = user;
 
     this.productNavigationState = { StartIndex: 0 };
     this.membershipNavigationState = { StartIndex: 0 };
@@ -272,10 +289,13 @@ export class NewRequestReferenceUserComponent implements AfterViewInit, OnDestro
     this.productDetailsService.showProductDetails(item, this.recipients);
   }
 
-  public onProductSelectionChanged(items: PortalShopServiceitems[] | PortalItshopPeergroupMemberships[], type: SelectedProductSource): void {
+  public onProductSelectionChanged(
+    items: PortalShopServiceitems[] | PortalItshopPeergroupMemberships[],
+    type: SelectedProductSource
+  ): void {
     type === SelectedProductSource.ReferenceUserProducts
-    ? this.selectionService.addProducts(items, SelectedProductSource.ReferenceUserProducts)
-    : this.selectionService.addProducts(items, SelectedProductSource.ReferenceUserOrgs);
+      ? this.selectionService.addProducts(items, SelectedProductSource.ReferenceUserProducts)
+      : this.selectionService.addProducts(items, SelectedProductSource.ReferenceUserOrgs);
   }
 
   public onChipListChange(event: MatChipListChange): void {}
@@ -283,7 +303,6 @@ export class NewRequestReferenceUserComponent implements AfterViewInit, OnDestro
   public async onChipClicked(index: number): Promise<void> {
     this.selectedChipIndex = index;
     this.orchestration.selectedChip = index;
-    // this.orchestration.clearSearch$.next(true);
 
     this.chipList.chips.forEach((chip, i) => {
       i === index ? (chip.selected = true) : (chip.selected = false);
@@ -291,17 +310,11 @@ export class NewRequestReferenceUserComponent implements AfterViewInit, OnDestro
 
     if (index === 0) {
       this.orchestration.selectedView = SelectedProductSource.ReferenceUserProducts;
-      // this.productNavigationState = { StartIndex: 0 };
-      // this.updateDisplayedColumns(this.displayedProductColumns);
-      // this.dst.clearSearch();
       await this.getProductData();
     }
 
     if (index === 1) {
       this.orchestration.selectedView = SelectedProductSource.ReferenceUserOrgs;
-      // this.membershipNavigationState = { StartIndex: 0 };
-      // this.updateDisplayedColumns(this.displayedMembershipColumns);
-      // this.dst.clearSearch();
       await this.getMembershipData();
     }
   }
@@ -322,6 +335,8 @@ export class NewRequestReferenceUserComponent implements AfterViewInit, OnDestro
         };
         this.orchestration.dstSettingsReferenceUserProducts = this.productDstSettings;
         this.orchestration.preselectBySource(SelectedProductSource.ReferenceUserProducts, this.productDst);
+      } else {
+        this.orchestration.disableSearch = false;
       }
     } finally {
       busy.endBusy();
@@ -346,6 +361,8 @@ export class NewRequestReferenceUserComponent implements AfterViewInit, OnDestro
 
         this.orchestration.dstSettingsReferenceUserOrgs = this.membershipDstSettings;
         this.orchestration.preselectBySource(SelectedProductSource.ReferenceUserOrgs, this.membershipDst);
+      } else {
+        this.orchestration.disableSearch = false;
       }
     } finally {
       busy.endBusy();
@@ -357,7 +374,9 @@ export class NewRequestReferenceUserComponent implements AfterViewInit, OnDestro
   ): CollectionLoadParameters | ServiceItemParameters {
     return {
       ...navigationState,
-      UID_Person: this.orchestration.recipients ? MultiValue.FromString(this.orchestration.recipients.value).GetValues().join(',') : undefined,
+      UID_Person: this.orchestration.recipients
+        ? MultiValue.FromString(this.orchestration.recipients.value).GetValues().join(',')
+        : undefined,
       UID_PersonReference: this.orchestration.referenceUser?.DataValue,
     };
   }

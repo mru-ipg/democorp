@@ -24,21 +24,39 @@
  *
  */
 
-import { Injectable, OnDestroy } from '@angular/core';
+import { ErrorHandler, Injectable, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 
-import { CollectionLoadParameters, EntityValue, IWriteValue, LocalProperty, ValueStruct } from 'imx-qbm-dbts';
 import { PortalItshopPatternRequestable, PortalServicecategories, PortalShopServiceitems } from 'imx-api-qer';
+import {
+  CollectionLoadParameters,
+  CompareOperator,
+  EntityCollectionData,
+  EntityValue,
+  FilterData,
+  FilterType,
+  IWriteValue,
+  LocalProperty,
+  ValueStruct,
+} from 'imx-qbm-dbts';
 
-import { AuthenticationService, DataSourceToolbarComponent, DataSourceToolbarSettings, EntityService, SettingsService } from 'qbm';
-import { QerApiService } from '../qer-api-client.service';
+import { TranslateService } from '@ngx-translate/core';
+import {
+  AuthenticationService,
+  DataSourceToolbarComponent,
+  DataSourceToolbarSettings,
+  EntityService,
+  LdsReplacePipe,
+  SettingsService,
+} from 'qbm';
 import { PersonService } from '../person/person.service';
+import { QerApiService } from '../qer-api-client.service';
+import { CurrentProductSource } from './current-product-source';
 import { ServiceItemParameters } from './new-request-product/service-item-parameters';
-import { NewRequestTabModel } from './new-request-tab/new-request-tab-model';
 import { SelectedProductSource } from './new-request-selected-products/selected-product-item.interface';
 import { NewRequestSelectionService } from './new-request-selection.service';
-import { CurrentProductSource } from './current-product-source';
+import { NewRequestTabModel } from './new-request-tab/new-request-tab-model';
 
 @Injectable({
   providedIn: 'root',
@@ -103,6 +121,8 @@ export class NewRequestOrchestrationService implements OnDestroy {
     this.disableSearch$.next(value);
   }
   public disableSearch$ = new BehaviorSubject<boolean>(null);
+
+  public keywords: string = '';
   //#endregion
 
   //#region Navigation State
@@ -212,6 +232,8 @@ export class NewRequestOrchestrationService implements OnDestroy {
 
   //#region AbortController
   public abortController = new AbortController();
+
+  public serviceCategoryAbortController = new AbortController();
   //#endregion
 
   //#endregion
@@ -223,6 +245,9 @@ export class NewRequestOrchestrationService implements OnDestroy {
     private readonly personProvider: PersonService,
     private readonly activatedRoute: ActivatedRoute,
     private readonly selectionService: NewRequestSelectionService,
+    private errorHandler: ErrorHandler,
+    private translator: TranslateService,
+    private ldsReplace: LdsReplacePipe,
     settingsService: SettingsService
   ) {
     this.navigationState = { PageSize: settingsService.DefaultPageSize, StartIndex: 0 };
@@ -266,9 +291,75 @@ export class NewRequestOrchestrationService implements OnDestroy {
     this.recipients$.next(this.recipients);
   }
 
+  /**
+   * Check through the fk table if this uid could be selected
+   * @param uidRecipient
+   * @returns
+   */
+  private async canRecipientBeSet(uidRecipient: string): Promise<boolean> {
+    const fkRelations = this.qerClient.typedClient.PortalCartitem.createEntity().UID_PersonOrdered.GetMetadata().GetFkRelations();
+    if (fkRelations.length < 1) {
+      return false;
+    }
+
+    // Assume there is only one relation and filter by the uid
+    const filter: FilterData[] = [
+      {
+        ColumnName: fkRelations[0].ColumnName,
+        Type: FilterType.Compare,
+        CompareOp: CompareOperator.Equal,
+        Value1: uidRecipient,
+      },
+    ];
+
+    var candidates: EntityCollectionData;
+    try {
+      candidates = await fkRelations[0].Get({ filter });
+    } catch (error) {
+      return false;
+    }
+
+    // Check if there is data
+    if (candidates && candidates.TotalCount > 0) return true;
+    else return false;
+  }
+
   public abortCall(): void {
     this.abortController.abort();
     this.abortController = new AbortController();
+  }
+
+  public abortServiceCategoryCall(): void {
+    this.serviceCategoryAbortController.abort();
+    this.serviceCategoryAbortController = new AbortController();
+  }
+
+  /***
+   * Set the recipient to the identity with the specified uid.
+   */
+  public async setRecipient(uidPerson: string): Promise<void> {
+    if (!uidPerson) {
+      return;
+    }
+    // Check if this is a valid person
+    const DisplayValue = await this.getPersonDisplay(uidPerson);
+    if (!DisplayValue) {
+      console.error(`There was an issue retrieving this person from the database: ${uidPerson}`);
+      this.errorHandler.handleError(this.ldsReplace.transform(this.translator.instant('#LDS#WD_InputInvalid'), uidPerson));
+      return;
+    }
+    // Check if we could set this person through the fkTable
+    const canBeSet = await this.canRecipientBeSet(uidPerson);
+    if (!canBeSet) {
+      console.error(`This person cannot be requested for by the current identity: ${uidPerson}`);
+      this.errorHandler.handleError(this.ldsReplace.transform(this.translator.instant('#LDS#WD_InputInvalid'), uidPerson));
+      return;
+    }
+    // Otherwise apply
+    this.setRecipients({
+      DataValue: uidPerson,
+      DisplayValue,
+    });
   }
 
   private async initRecipients(): Promise<void> {
@@ -297,11 +388,12 @@ export class NewRequestOrchestrationService implements OnDestroy {
     });
 
     const uidPerson = this.activatedRoute.snapshot.paramMap.get('UID_Person');
+    const DisplayValue = await this.getPersonDisplay(uidPerson);
 
-    if (uidPerson) {
+    if (uidPerson && DisplayValue) {
       await this.recipients.Column.PutValueStruct({
         DataValue: uidPerson,
-        DisplayValue: await this.getPersonDisplay(uidPerson),
+        DisplayValue,
       });
 
       // TODO in this case, CanRequestForSomebodyElse is false
@@ -312,12 +404,19 @@ export class NewRequestOrchestrationService implements OnDestroy {
     };
   }
 
-  private async getPersonDisplay(uid: string): Promise<string> {
+  /**
+   * Get the person display via the person provider
+   * @param uid
+   * @returns
+   */
+  private async getPersonDisplay(uid: string | null): Promise<string | undefined> {
+    if (!uid) {
+      return;
+    }
+
     const person = await this.personProvider.get(uid);
     if (person && person.Data.length) {
       return person.Data[0].GetEntity().GetDisplay();
     }
-
-    return uid;
   }
 }

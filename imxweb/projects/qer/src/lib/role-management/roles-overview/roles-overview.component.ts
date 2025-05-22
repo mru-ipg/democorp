@@ -127,7 +127,7 @@ export class RolesOverviewComponent implements OnInit, OnDestroy, SideNavigation
     this.canCreateAeRole = (await this.userModelService.getUserConfig()).CanCreateAERole;
 
     try {
-      await this.metadataProvider.update([this.ownershipInfo.TableName]);
+      await this.metadataProvider.updateNonExisting([this.ownershipInfo.TableName]);
       this.isStructureAdmin = await this.permission.isStructAdmin();
     } catch (error) {
       this.navigateToStartPage(error);
@@ -157,7 +157,8 @@ export class RolesOverviewComponent implements OnInit, OnDestroy, SideNavigation
     this.hasHierarchy = (await this.roleService.getEntitiesForTree(this.ownershipInfo.TableName, { PageSize: -1 }))?.Hierarchy != null;
     this.useTree = this.isAdmin && this.hasHierarchy;
     this.canCreate =
-      ((this.isAdmin && this.isStructureAdmin) || !this.isAdmin) && this.roleService.canCreate(this.ownershipInfo.TableName, this.isAdmin, this.canCreateAeRole);
+      ((this.isAdmin && this.isStructureAdmin) || !this.isAdmin) &&
+      this.roleService.canCreate(this.ownershipInfo.TableName, this.isAdmin, this.canCreateAeRole);
 
     this.navigationState = this.useTree
       ? {
@@ -340,16 +341,19 @@ export class RolesOverviewComponent implements OnInit, OnDestroy, SideNavigation
     if (this.exportMethod) {
       this.exportMethod.initialColumns = this.displayColumns.map((col) => col.ColumnName);
     }
-    this.dstSettings = {
-      dataSource: await this.roleService.get(this.ownershipInfo.TableName, this.isAdmin, this.navigationState),
-      entitySchema: this.entitySchema,
-      navigationState: this.navigationState,
-      displayedColumns: this.displayColumns,
-      filters: this.filterOptions,
-      dataModel: this.dataModel,
-      viewConfig: this.viewConfig,
-      exportMethod: this.exportMethod,
-    };
+    const dataSource = await this.roleService.get(this.ownershipInfo.TableName, this.isAdmin, this.navigationState);
+    if (dataSource) {
+      this.dstSettings = {
+        dataSource: dataSource,
+        entitySchema: this.entitySchema,
+        navigationState: this.navigationState,
+        displayedColumns: this.displayColumns,
+        filters: this.filterOptions,
+        dataModel: this.dataModel,
+        viewConfig: this.viewConfig,
+        exportMethod: this.exportMethod,
+      };
+    }
   }
 
   public async updateConfig(config: ViewConfigData): Promise<void> {

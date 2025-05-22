@@ -3,6 +3,7 @@
     <imx-cdr-editor
       *ngFor="let cdr of columns; let i = index"
       [cdr]="cdr"
+      [validateOnlyOnChange]="true"
       (controlCreated)="onFormControlCreated(cdr.column.ColumnName + '_' + i, $event)"
       [attr.data-imx-identifier]="'column_' + cdr.column.ColumnName + '_' + i"
     >
@@ -17,7 +18,9 @@
     </imx-decision-reason>
 
     <imx-cdr-editor [cdr]="currentStepCdr" data-imx-identifier="workflow-single-action-current-step"></imx-cdr-editor>
+    <imx-cdr-editor [cdr]="complianceCdr" data-imx-identifier="workflow-single-action-current-step"></imx-cdr-editor>
 
+    <imx-busy-indicator *ngIf="busyService.isBusy"></imx-busy-indicator>
     <ng-container *ngIf="data.additionalInfo != null">
       <imx-cdr-editor
         *ngFor="let cdr of data.additionalInfo; let i = index"
@@ -27,7 +30,7 @@
       >
       </imx-cdr-editor>
     </ng-container>
-    
+
     <imx-cdr-editor
       *ngFor="let cdr of requestParameterColumns; let i = index"
       [cdr]="cdr"

@@ -1,9 +1,9 @@
 <div class="imx-rules-violations-page">
   <div class="heading-wrapper">
-    <h1 class="mat-headline">
+    <h2 class="mat-headline">
       <span>{{ '#LDS#Heading Rule Violations' | translate }}</span>
       <imx-help-contextual></imx-help-contextual>
-    </h1>
+    </h2>
   </div>
   <mat-card>
     <div class="imx-table-container">
@@ -12,7 +12,7 @@
         [options]="['search', 'sort', 'filter', 'groupBy', 'settings']"
         [settings]="dstSettings"
         [busyService]="busyService"
-        (search)="getData({ search: $event })"
+        (search)="onSearch($event)"
         (navigationStateChanged)="getData($event)"
         (updateConfig)="updateConfig($event)"
         (deleteConfigById)="deleteConfigById($event)"
@@ -41,16 +41,9 @@
             {{ item?.stateBadge?.caption }}
           </ng-template>
         </imx-data-table-column>
-        <imx-data-table-column
-          [entityColumn]="entitySchema.Columns.RiskIndexCalculated"
-          data-imx-identifier="rules-violations-table-column-RiskIndexCalculated"
-        >
+        <imx-data-table-column [entityColumn]="entitySchema.Columns.RiskIndexCalculated" data-imx-identifier="rules-violations-table-column-RiskIndexCalculated">
         </imx-data-table-column>
-        <imx-data-table-column
-          [entityColumn]="entitySchema.Columns.RiskIndexReduced"
-          data-imx-identifier="rules-violations-table-column-RiskIndexReduced"
-        >
-        </imx-data-table-column>
+        <imx-data-table-column [entityColumn]="entitySchema.Columns.RiskIndexReduced" data-imx-identifier="rules-violations-table-column-RiskIndexReduced"> </imx-data-table-column>
         <imx-data-table-generic-column columnName="decision" data-imx-identifier="rules-violations-table-column-decision">
           <ng-template let-item>
             <div class="imx-decision">
