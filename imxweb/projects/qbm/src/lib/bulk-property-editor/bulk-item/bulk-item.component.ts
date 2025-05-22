@@ -162,4 +162,11 @@ export class BulkItemComponent implements OnInit {
 
     visible ? (this.iconStyle = { visibility: 'visible' }) : (this.iconStyle = { visibility: 'hidden' });
   }
+    get editableProperties(): any[] {
+    if (!this.bulkItem?.properties) {
+      return [];
+    }
+
+    return this.bulkItem.properties.filter((item) => !item.column.GetMetadata().GetDisplay().startsWith("hidden_"))
+  }
 }

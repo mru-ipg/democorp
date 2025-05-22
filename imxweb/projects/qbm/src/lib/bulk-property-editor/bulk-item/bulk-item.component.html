@@ -13,7 +13,7 @@
   </mat-expansion-panel-header>
   <div class="imx-description">{{ bulkItem?.description }}</div>
   <form [formGroup]="formGroup">
-    <imx-cdr-editor *ngFor="let cdr of bulkItem?.properties; let i = index"
+    <imx-cdr-editor *ngFor="let cdr of editableProperties; let i = index"
       [cdr]="cdr"
       (valueChange)="onValueChanged()"
       (pendingChanged)="onPendingChanged($event)"
