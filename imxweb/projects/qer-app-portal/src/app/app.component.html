@@ -20,6 +20,5 @@
   <div class="pageContent" [ngClass]="{ 'pageContent--full-page': isContentFullScreen }">
     <imx-usermessage *ngIf="isLoggedIn" [hidden]="hideUserMessage"></imx-usermessage>
     <router-outlet *ngIf="showPageContent"></router-outlet>
-    <p class="current-time" strong>Aktuelle Uhrezeit {{ currentTime | date:'HH:mm':'Europe/Zurich' }}</p>
   </div>
 </div>

@@ -1,10 +1,9 @@
-<h1 class="mat-headline">{{ '#LDS#Welcome' | translate }}</h1>
-<p>Hello World from CI/CD</p>
+<h2 class="mat-headline">{{ '#LDS#Welcome' | translate }}</h2>
 
 <imx-busy-indicator *ngIf="!viewReady"></imx-busy-indicator>
 
 <ng-container>
-  <div [ngClass]="{ hidden: !viewReady, 'imx-flexible-tile-row': true}">
+  <div [ngClass]="{ hidden: !viewReady, 'imx-flexible-tile-row': true }">
     <imx-badge-tile
       data-imx-identifier="start-tile-shopping-cart"
       [caption]="'#LDS#Heading Products in Shopping Cart' | translate"
@@ -67,7 +66,7 @@
 
     <imx-ext class="imx-flexible-tile-row" id="Dashboard-SmallTiles" [referrer]="this"></imx-ext>
   </div>
-  <div [ngClass]="{ hidden: !viewReady, 'imx-flexible-tile-row': true}">
+  <div [ngClass]="{ hidden: !viewReady, 'imx-flexible-tile-row': true }">
     <imx-icon-tile
       *ngIf="viewReady && ShowPasswordTile()"
       data-imx-identifier="start-tile-no-password-query-and-answer-set"
@@ -141,33 +140,6 @@
   </div>
   <div class="imx-flexible-tile-row">
     <imx-businessowner-chartsummary></imx-businessowner-chartsummary>
-    <imx-tile *ngIf="viewReady"
-    data-imx-identifier="businessowner-chartsummary-tile-my-direct-reports" [identifier]="'my-direct-reports'"
-    [size]="'Dashboard'" [contentType]="'Container'">
-    <ng-template #CaptionTemplate>
-      <div class="imx-flex-header">
-        <div data-imx-identifier="tile-div-caption-container" class="imx-generic-tile-caption">
-          <h1 data-imx-identifier="tile-h1-caption">
-            <span>My Ae Roles</span>
-            <span>({{aeroles.length }}) </span>
-          </h1>
-        </div>
-        <div class="imx-mobile-mobileonly">
-          <button mat-icon-button color="primary" [attr.data-imx-identifier]="'tile-button-explore-mobile-reports'"
-            type="button">
-            <eui-icon icon="chevronright"></eui-icon>
-          </button>
-        </div>
-      </div>
-    </ng-template>
-    <div class="imx-tile-content">
-      <ul class="imx-valuelist">
-        <li *ngFor="let identity of aeroles">
-          <a tabindex="0">{{identity.GetEntity().GetDisplay()}}</a>
-        </li>
-      </ul>
-    </div>
-  </imx-tile>
 
     <imx-ext id="Dashboard-LargeTiles"></imx-ext>
     <!-- TODO later

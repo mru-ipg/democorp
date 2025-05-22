@@ -26,8 +26,9 @@
 
 import { FlatTreeControl } from '@angular/cdk/tree';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { PortalServicecategories, PortalShopServiceitems } from 'imx-api-qer';
-import { CollectionLoadParameters, CompareOperator, DisplayColumns, EntityCollection, EntityCollectionData, ExtendedTypedEntityCollection, IClientProperty, IWriteValue, MultiValue, TypedEntityCollectionData } from 'imx-qbm-dbts';
+import { CollectionLoadParameters, CompareOperator, DisplayColumns, IClientProperty, IWriteValue, MultiValue } from 'imx-qbm-dbts';
 import {
   Busy,
   BusyService,
@@ -36,9 +37,10 @@ import {
   DataSourceToolbarSettings,
   DataSourceToolbarComponent,
   ClassloggerService,
-  imx_SessionService,
 } from 'qbm';
 import { Subscription } from 'rxjs/internal/Subscription';
+import { first, skip } from 'rxjs/operators';
+
 import { NewRequestOrchestrationService } from '../new-request-orchestration.service';
 import { NewRequestCategoryApiService } from './new-request-category-api.service';
 import { NewRequestProductApiService } from './new-request-product-api.service';
@@ -47,11 +49,7 @@ import { from } from 'rxjs';
 import { SelectedProductSource } from '../new-request-selected-products/selected-product-item.interface';
 import { ProductDetailsService } from './product-details-sidesheet/product-details.service';
 import { NewRequestSelectionService } from '../new-request-selection.service';
-import {AdsGroupService} from '../../ads-group.service';
 import { CurrentProductSource } from '../current-product-source';
-import { ActivatedRoute } from '@angular/router';
-import { skip } from 'rxjs/operators';
-import { QerApiService } from '../../qer-api-client.service';
 
 export interface NewRequestCategoryNode {
   isSelected?: boolean;
@@ -60,6 +58,7 @@ export interface NewRequestCategoryNode {
   children?: NewRequestCategoryNode[];
   isLoading?: boolean;
   level?: number;
+  isSearchResult?: boolean;
 }
 
 @Component({
@@ -89,12 +88,10 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
   public resetSidenav = false;
   public selectedServiceCategoryUID: string;
   public selectedServiceItemUID: string;
-  public isUserManager: boolean;
-  public userId: string;
 
   public categoryTreeControl = new FlatTreeControl<NewRequestCategoryNode>(
-    (leaf) => leaf.level,
-    (leaf) => leaf.entity.HasChildren.Column.GetValue(),
+    (leaf) => leaf.level || 0,
+    (leaf) => leaf.entity?.HasChildren.Column.GetValue()
   );
   public apiControls: DynamicDataApiControls<NewRequestCategoryNode> = {
     setup: async () => {
@@ -104,7 +101,7 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
           ? MultiValue.FromString(this.orchestration.recipients.value).GetValues().join(',')
           : undefined,
         ParentKey: '',
-              };
+      };
       if (this.selectedServiceCategoryUID && !this.resetSidenav) {
         userParams.filter = [
           {
@@ -113,28 +110,9 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
             Value1: this.selectedServiceCategoryUID,
           },
         ];
+        userParams.ParentKey = undefined;
       }
-
-      const allPersonns = await this.qerClientApi.typedClient.PortalAdminPerson.Get({PageSize: 400});
-      this.userId = (await this.sessionService.getSessionState()).UserUid;
-      this.isUserManager =  allPersonns.Data.some(person =>  person.GetEntity().GetColumn("UID_PersonHead").GetValue() === this.userId);
-
-      let servicecategories: ExtendedTypedEntityCollection<any, unknown>;
-
-      if (this.isUserManager) {
-        // Apply filter for manager
-        servicecategories = await this.categoryApi.get(userParams);
-      } else {
-        // Apply filter for non-manager
-        servicecategories = await this.categoryApi.get({filter: [
-          {
-              ColumnName: 'Ident_AccProductGroup',
-              CompareOp: CompareOperator.NotEqual,
-              Value1: 'Access Lifecycle',
-          },
-      ]});
-      }
-
+      const servicecategories = await this.categoryApi.get(userParams);
       this.serviceCategoriesTotalCount = servicecategories?.totalCount;
       const dstSettings: DataSourceToolbarSettings = {
         dataSource: servicecategories,
@@ -214,18 +192,27 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
       root.children.push(...children);
       return children;
     },
+    abortSearch: () => {
+      this.orchestration.abortServiceCategoryCall();
+    },
     search: async (params: CollectionLoadParameters) => {
       const userParams = {
         UID_Person: this.orchestration.recipients
           ? MultiValue.FromString(this.orchestration.recipients.value).GetValues().join(',')
           : undefined,
       };
-      const response = await this.categoryApi.get({ ParentKey: '', ...params, ...userParams });
+      const parentKeyFilter = !!params.search?.length ? {} : { ParentKey: '' };
+      this.orchestration.abortServiceCategoryCall();
+      const response = await this.categoryApi.get({ ...parentKeyFilter, ...params, ...userParams });
+      if (!response?.Data) {
+        return;
+      }
       const searchNodes = response.Data.map((datum) => {
         const node: NewRequestCategoryNode = {
           entity: datum,
           isSelected: false,
           level: 1,
+          isSearchResult: !!params.search?.length,
         };
         return node;
       });
@@ -252,7 +239,7 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
   public isLoading = (node: NewRequestCategoryNode) => node.isLoading;
   // Here we can allow for the root to not be collapsable, but this breaks other functions like the 'collapse all' button
   public hasChild = (_: number, node: NewRequestCategoryNode) =>
-    (node.children && node.children.length > 0) || node.entity?.HasChildren.Column.GetValue();
+    !node.isSearchResult && ((node.children && node.children.length > 0) || node.entity?.HasChildren.Column.GetValue());
 
   public searchApi = () => {
     this.logger.trace(this, 'Search API: NewRequestProductComponent');
@@ -272,10 +259,7 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
     private readonly productDetailsService: ProductDetailsService,
     private readonly cd: ChangeDetectorRef,
     private readonly busyService: BusyService,
-    private readonly route: ActivatedRoute,
-    private readonly adsgroupsService: AdsGroupService,
-    private readonly sessionService: imx_SessionService,
-    private readonly qerClientApi: QerApiService
+    private readonly route: ActivatedRoute
   ) {
     this.orchestration.selectedView = SelectedProductSource.AllProducts;
     this.orchestration.searchApi$.next(this.searchApi);
@@ -308,10 +292,10 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
                 this.orchestration.dstSettingsAllProducts = this.dstSettings;
               }
               this.busy.endBusy(true);
-            }),
+            })
           );
         }
-      }),
+      })
     );
 
     this.subscriptions.push(
@@ -319,7 +303,7 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
         this.productNavigationState = navigation;
         this.updateDisplayedColumns(this.displayedProductColumns);
         await this.getProductData(true);
-      }),
+      })
     );
 
     this.subscriptions.push(
@@ -328,13 +312,13 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
           this.includeChildCategories = includeChilds;
           await this.getProductData();
         }
-      }),
+      })
     );
 
     this.subscriptions.push(
       this.selectionService.selectedProducts$.subscribe(() => {
         this.orchestration.preselectBySource(SelectedProductSource.AllProducts, this.dst);
-      }),
+      })
     );
 
     this.subscriptions.push(this.selectionService.selectedProductsCleared$.subscribe(() => this.dst?.clearSelection()));
@@ -343,9 +327,16 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
   }
 
   public async ngOnInit(): Promise<void> {
-    this.productNavigationState = { StartIndex: 0};
+    this.productNavigationState = { StartIndex: 0 };
     this.orchestration.selectedCategory = null;
     this.updateDisplayedColumns(this.displayedProductColumns);
+
+    const queryParams = await this.route.queryParams.pipe(first()).toPromise();
+    const productSearchString = queryParams['ProductSearchString'];
+    if (productSearchString?.length > 0) {
+      // the user can pass product search string by URL parameter -> load the data with this search string
+      this.setProductSearchString(productSearchString);
+    }
 
     this.selectedServiceCategoryUID = this.route.snapshot.queryParams['serviceCategory'];
     this.selectedServiceItemUID = this.route.snapshot.queryParams['serviceItem'];
@@ -360,10 +351,13 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
           firstIteration = false;
         } else {
           this.dynamicDataSource.setup(true);
-          this.getProductData(true);
+          await this.getProductData(true);
         }
-      }),
+      })
     );
+        
+    // pre-assign the recipient by URL parameter
+    this.orchestration.setRecipient(this.route.snapshot.queryParams['UID_Person'])
   }
 
   public ngOnDestroy(): void {
@@ -376,21 +370,20 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
 
   public async categorySelectedNode(node: NewRequestCategoryNode): Promise<void> {
     this.productNavigationState.StartIndex = 0;
-    this.productNavigationState.PageSize = 100;
     if (node.entity) {
       // This is a category
       let category = node?.entity?.GetEntity();
       this.orchestration.selectedCategory = node?.entity;
       // this.orchestration.includeChildCategories = this.includeChildCategories;
       this.accProductGroup = category.GetKeys()[0];
-      this.getProductData();
+      await this.getProductData();
     } else {
       // This is the root node and it has no entity
       this.orchestration.selectedCategory = null;
       this.includeChildCategories = false;
       // this.orchestration.includeChildCategories = this.includeChildCategories;
       this.accProductGroup = null;
-      this.getProductData();
+      await this.getProductData();
     }
 
     this.orchestration.includeChildCategories = this.includeChildCategories;
@@ -401,12 +394,7 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
   }
 
   public async onRowSelected(item: PortalShopServiceitems): Promise<void> {
-    const groupName = item.GetEntity().GetColumn("ArticleCode").GetValue();
-    const formatedGroupName  = this.getValueAfterSlash(groupName);
-    const groupItem =  await this.adsgroupsService.typedClient.PortalGroupsAdgroup.Get(formatedGroupName);
-    const adsGroup_uid = groupItem.Data[0].GetEntity().GetKeys()[0];
-    const adAccountsinGroup =  await this.adsgroupsService.typedClient.PortalGroupsAdaccount.Get(adsGroup_uid);  
-    this.productDetailsService.showProductDetails(item, this.recipients, adAccountsinGroup);
+    this.productDetailsService.showProductDetails(item, this.recipients);
   }
 
   /**
@@ -442,7 +430,6 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
         this.orchestration.dstSettingsAllProducts = this.dstSettings;
 
         if (loadPreselection) {
-
           this.orchestration.preselectBySource(SelectedProductSource.AllProducts, this.dst);
         }
 
@@ -454,14 +441,12 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
   }
 
   private getCollectionLoadParameter(): CollectionLoadParameters | ServiceItemParameters {
-  
     let parameters: CollectionLoadParameters | ServiceItemParameters = {
-      ...this.productNavigationState,
+      ...this.dstSettings ? this.dstSettings.navigationState : this.productNavigationState,
       UID_Person: this.orchestration.recipients
         ? MultiValue.FromString(this.orchestration.recipients.value).GetValues().join(',')
         : undefined,
     };
-
 
     if (this.accProductGroup) {
       parameters.UID_AccProductGroup = this.accProductGroup;
@@ -515,11 +500,9 @@ export class NewRequestProductComponent implements OnInit, OnDestroy {
     }
   }
 
-  getValueAfterSlash(input: string): string {
-    const index = input.indexOf('\\');
-    if (index !== -1 && index < input.length - 1) {
-        return input.substring(index + 1); // Adjusted to start from index + 1
-    }
-    return input;
+  private async setProductSearchString(productSearchString: string): Promise<void> {
+    this.orchestration.keywords = productSearchString;
+    this.productNavigationState.search = productSearchString;
+    await this.getProductData();
   }
 }

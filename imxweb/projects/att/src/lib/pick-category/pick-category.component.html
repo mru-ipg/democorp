@@ -1,9 +1,9 @@
 <div class="imx-pickcategory-page">
   <div class="heading-wrapper">
-    <h1 class="mat-headline">
+    <h2 class="mat-headline">
       <span>{{ '#LDS#Heading Sample Data' | translate }}</span>
       <imx-help-contextual></imx-help-contextual>
-    </h1>
+    </h2>
   </div>
   <mat-card>
     <div class="imx-table-container" *ngIf="dstWrapper && dstSettings">
@@ -11,7 +11,8 @@
         #dst
         [options]="['search']"
         [settings]="dstSettings"
-        (search)="getData({ search: $event })"
+        [busyService]="busyService"
+        (search)="onSearch($event)"
         (navigationStateChanged)="getData($event)"
         data-imx-identifier="pick-category-dst"
       >

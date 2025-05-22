@@ -6,7 +6,9 @@
   [max]="columnContainer?.valueConstraint?.MaxValue"
   [isValueRequired]="columnContainer?.isValueRequired"
   [withTime]="withTime"
+  [validateOnlyOnChange]="validateOnlyOnChange"
   [isLoading]="isBusy"
+  (manuallyChanged)="resetErrorCount()"
   [imxIdentifierSuffix]="'-cdr-' + columnContainer?.name">
 </imx-date>
 

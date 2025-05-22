@@ -56,13 +56,13 @@ export class CartItemEditComponent implements OnDestroy {
     changeDetector: ChangeDetectorRef
   ) {
     this.shoppingCartItem = this.data.entityWrapper.typedEntity;
-
     this.initColumns();
 
     if (data.updated) {
       this.subscriptions.push(
         data.updated.subscribe(() => {
           this.editors.forEach((elem) => elem.update());
+          this.columns = this.allColumns.filter((column) => !column.GetMetadata().GetDisplay().startsWith("hidden_"))
           changeDetector.detectChanges();
         })
       );
@@ -82,6 +82,7 @@ export class CartItemEditComponent implements OnDestroy {
     this.subscriptions.forEach((s) => s.unsubscribe());
   }
 
+  private allColumns: IEntityColumn[];
   private initColumns(): void {
     let defaultColumns = [this.shoppingCartItem.OrderReason.Column, this.shoppingCartItem.UID_QERJustificationOrder.Column];
     if (!this.data.multiple) {
@@ -95,10 +96,11 @@ export class CartItemEditComponent implements OnDestroy {
       defaultColumns.push(this.shoppingCartItem.ValidFrom.Column, this.shoppingCartItem.ValidUntil.Column);
     }
 
-    this.columns = this.mergeColumns(
+    this.allColumns = this.mergeColumns(
       (this.data.entityWrapper.parameterCategoryColumns ?? []).map((item) => item.column),
       defaultColumns
     );
+    this.columns = this.allColumns.filter((column) => !column.GetMetadata().GetDisplay().startsWith("hidden_"))
   }
 
   private mergeColumns(columns: IEntityColumn[], columnsToAdd: IEntityColumn[]): IEntityColumn[] {

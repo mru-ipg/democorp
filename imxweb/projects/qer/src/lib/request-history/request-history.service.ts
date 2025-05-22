@@ -52,6 +52,8 @@ import { ItshopRequestService } from '../itshop/itshop-request.service';
 
 @Injectable()
 export class RequestHistoryService {
+  public abortController = new AbortController();
+
   constructor(private readonly qerClient: QerApiService, private readonly itshopRequest: ItshopRequestService) {}
 
   public get PortalItshopRequestsSchema(): EntitySchema {
@@ -62,12 +64,13 @@ export class RequestHistoryService {
     userUid: string,
     parameters: RequestHistoryLoadParameters
   ): Promise<ExtendedTypedEntityCollection<ItshopRequest, PwoExtendedData>> {
-    const collection = await this.qerClient.typedClient.PortalItshopRequests.Get(parameters);
+    const collection = await this.qerClient.typedClient.PortalItshopRequests.Get(parameters, { signal: this.abortController.signal });
 
+    if (!collection) {
+      return undefined;
+    }
     return {
-      tableName: collection.tableName,
-      totalCount: collection.totalCount,
-      extendedData: collection.extendedData,
+      ...collection,
       Data: collection.Data.map((element, index) => {
         const requestData = new ItshopRequestData({ ...collection.extendedData, ...{ index } });
         const parameterColumns = this.itshopRequest.createParameterColumns(element.GetEntity(), requestData.parameters);
@@ -97,21 +100,21 @@ export class RequestHistoryService {
   ): Promise<ExtendedTypedEntityCollection<ItshopRequest, PwoExtendedData>> {
     const dummy: ArchivedRequestHistoryLoadParameters = {};
     recipientId ? (dummy.uidpersonordered = recipientId) : (dummy.uidpersoninserted = userUid);
-    const collection = await this.qerClient.typedClient.PortalItshopHistoryRequests.Get(new Date(), dummy);
+    const collection = await this.qerClient.typedClient.PortalItshopHistoryRequests.Get(new Date(), dummy, {
+      signal: this.abortController.signal,
+    });
+    if (!collection) {
+      return undefined;
+    }
     return {
-      tableName: collection.tableName,
-      totalCount: collection.totalCount,
-      extendedData: collection.extendedData,
+      ...collection,
       Data: collection.Data.map((element, index) => {
         const requestData = new ItshopRequestData({ ...collection.extendedData, ...{ index } });
-        const parameterColumns = this.itshopRequest.createParameterColumns(
-          element.GetEntity(),
-          requestData.parameters
-        );
+        const parameterColumns = this.itshopRequest.createParameterColumns(element.GetEntity(), requestData.parameters);
         const request = new ItshopRequest(element.GetEntity(), requestData.pwoData, parameterColumns, userUid);
         request.isArchived = true;
-        return request
-      })
+        return request;
+      }),
     };
   }
 
@@ -132,8 +135,11 @@ export class RequestHistoryService {
   //   }
   // }
 
-  public async getFilterOptions(userUid: string, filterPresets: { [name: string]: string } = {}): Promise<DataSourceToolbarFilter[]> {
-    return (await this.getDataModel(userUid)).Filters.map((option: DataSourceToolbarFilter) => {
+  public async getFilterOptions(userUid: string, filterPresets: { [name: string]: string } = {}, dataModel?: DataModel ): Promise<DataSourceToolbarFilter[]> {
+    if (!dataModel) {
+      dataModel = await this.getDataModel(userUid);
+    }
+    return dataModel.Filters.map((option: DataSourceToolbarFilter) => {
       option.InitialValue = filterPresets[option.Name];
       return option;
     });
@@ -186,7 +192,7 @@ export class RequestHistoryService {
   public async copyRequest(pwo: PortalItshopRequests): Promise<PortalCartitem> {
     const item = this.qerClient.typedClient.PortalCartitem.createEntity({
       Columns: {
-        UID_AccProduct: {Value:pwo.UID_AccProduct.value}
+        UID_AccProduct: { Value: pwo.UID_AccProduct.value },
       },
     });
 
@@ -196,5 +202,10 @@ export class RequestHistoryService {
     await this.qerClient.typedClient.PortalCartitem.Post(item);
 
     return item;
+  }
+
+  public abortCall(): void {
+    this.abortController.abort();
+    this.abortController = new AbortController();
   }
 }
